@@ -1190,6 +1190,32 @@ func confirmationProcess(c *gin.Context) {
 		return
 	}
 
+	sessionToken, err := c.Cookie(config.SessionCookieName)
+	if err != nil {
+		p.Error = true
+		p.ErrMsg = "Il semblerait que tu aies été déconnecté·e."
+		c.HTML(http.StatusUnauthorized, "account.html", p)
+		return
+	}
+
+	uid, err := users.GetUserID(sessionToken)
+	if err != nil {
+		p.Error = true
+		p.ErrMsg = "Une erreur est survenue."
+		c.HTML(http.StatusInternalServerError, "account.html", p)
+		log.Printf("error: cannot retrieve user ID: %s\n", err)
+		return
+	}
+
+	if err := users.ValidateAccount(uid); err != nil {
+		p.Error = true
+		p.ErrMsg = "Une erreur est survenue."
+		c.HTML(http.StatusInternalServerError, "account.html", p)
+		log.Printf("error: cannot validate user account with ID '%s': %s\n", uid, err)
+		return
+	}
+
+	p.HasConfirmedAccount = true
 	p.HasMsg = true
 	p.Msg = "Ton compte a été validé ! Tu peux dorénavant publier des évènements."
 	c.HTML(http.StatusOK, "account.html", p)

@@ -35,6 +35,7 @@ func SendConfirmationToken(email, sessionToken string) error {
 		email:        email,
 		sessionToken: sessionToken,
 	}
+	log.Printf("user '%s' has been attributed validation token '%s'\n", email, token)
 
 	// send the mail with a 10 sec timeout
 	url := "https://manifeste.info/moncompte/validation/" + token

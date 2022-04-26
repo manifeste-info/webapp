@@ -136,3 +136,9 @@ func HasConfirmedAccount(id string) (bool, error) {
 	}
 	return b, nil
 }
+
+// ValidateAccount validates a user account based in its userId
+func ValidateAccount(id string) error {
+	_, err := database.DB.Query(`UPDATE users SET has_confirmed_account='true' WHERE id=$1;`, id)
+	return err
+}
