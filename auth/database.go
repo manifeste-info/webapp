@@ -1,8 +1,6 @@
 package auth
 
 import (
-	"log"
-
 	"github.com/manifeste-info/webapp/database"
 )
 
@@ -22,6 +20,5 @@ func getHashedPassword(email string) (string, error) {
 	if err := rows.Scan(&r.Hash); err != nil {
 		return "", err
 	}
-	log.Printf("retrieved hash: %s\n", r.Hash)
 	return r.Hash, nil
 }
