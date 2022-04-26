@@ -10,6 +10,7 @@ import (
 	"github.com/manifeste-info/webapp/auth"
 	"github.com/manifeste-info/webapp/config"
 	"github.com/manifeste-info/webapp/events"
+	"github.com/manifeste-info/webapp/mail"
 	"github.com/manifeste-info/webapp/users"
 
 	limiter "github.com/ulule/limiter/v3"
@@ -55,6 +56,7 @@ func CreateRouter() (*gin.Engine, error) {
 		authorized.GET("/nouveau", newPage)
 		authorized.GET("/maj/:eventID", updatePage)
 		authorized.GET("/supprimer/:eventID", deleteProcess)
+		authorized.GET("/confirmation/:token", confirmationProcess)
 
 		authorized.POST("/nouveau", newProcess)
 		authorized.POST("/maj/:eventID", updateProcess)
@@ -333,6 +335,14 @@ func registrationProcess(c *gin.Context) {
 		return
 	}
 
+	if err := mail.SendConfirmationToken(p.Email, sessionToken); err != nil {
+		p.Error = true
+		p.ErrMsg = "Une erreur est survenue lors de l'envoi du mail de confirmation."
+		c.HTML(http.StatusInternalServerError, "register.html", p)
+		log.Printf("error: cannot send confirmation token: %s\n", err)
+		return
+	}
+
 	c.SetCookie(config.SessionCookieName, sessionToken, config.SessionCookieExpiry, "/", c.Request.URL.Hostname(), false, true)
 	p.Success = true
 	c.HTML(http.StatusOK, "register.html", p)
@@ -350,6 +360,10 @@ func accountPage(c *gin.Context) {
 		// in case of error
 		Error  bool
 		ErrMsg string
+
+		// in case of message to display
+		HasMsg bool
+		Msg    string
 
 		Name                string
 		UserID              string
@@ -1142,4 +1156,41 @@ func adminUserProcess(c *gin.Context) {
 	p.SuccessMsg = "L'utilisateur·rice a été banni."
 	log.Printf("admin: banned userID '%s'\n", userID)
 	c.HTML(http.StatusOK, "admin.html", p)
+}
+
+/*
+	Confirmation process handler
+
+	This handler checks if a confirmation token received by email is valid or not
+*/
+func confirmationProcess(c *gin.Context) {
+	type page struct {
+		// in case of error
+		Error  bool
+		ErrMsg string
+
+		// in case of message to display
+		HasMsg bool
+		Msg    string
+
+		Name                string
+		UserID              string
+		IsAdmin             bool
+		HasEvents           bool
+		HasConfirmedAccount bool
+		Events              []events.Event
+	}
+	p := page{}
+
+	token := c.Param("token")
+	if !mail.ValidateConfirmationToken(token) {
+		p.Error = true
+		p.ErrMsg = "Le token est invalide."
+		c.HTML(http.StatusUnauthorized, "account.html", p)
+		return
+	}
+
+	p.HasMsg = true
+	p.Msg = "Ton compte a été validé ! Tu peux dorénavant publier des évènements."
+	c.HTML(http.StatusOK, "account.html", p)
 }

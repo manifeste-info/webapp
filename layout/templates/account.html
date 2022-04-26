@@ -7,6 +7,13 @@
   </div>
 </div>
 {{else}}
+{{if .HasMsg}}
+<div class="container mt-5">
+  <div class="alert alert-info" role="alert">
+    {{.Msg}}
+  </div>
+</div>
+{{end}}
 <div class="container mt-5">
   {{if .IsAdmin}}
     <h1>Bienvenue, {{.Name}} 👋 <span class="badge badge-pill badge-info">admin</span></h1>

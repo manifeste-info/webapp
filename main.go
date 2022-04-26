@@ -8,20 +8,25 @@ import (
 
 	"github.com/manifeste-info/webapp/database"
 	"github.com/manifeste-info/webapp/handlers"
+	"github.com/manifeste-info/webapp/mail"
 )
 
 func main() {
 	var host, port, user, pass, name string
+	var mgAPIKey string
 	fs := flag.NewFlagSetWithEnvPrefix(os.Args[0], "MANIFESTE", 0)
 	fs.StringVar(&host, "db-host", "database", "Database host")
 	fs.StringVar(&port, "db-port", "5432", "Database port")
 	fs.StringVar(&user, "db-user", os.Getenv("POSTGRES_USER"), "Database user")
 	fs.StringVar(&pass, "db-pass", os.Getenv("POSTGRES_PASSWORD"), "Database pass")
 	fs.StringVar(&name, "db-name", os.Getenv("POSTGRES_DB"), "Database name")
+	fs.StringVar(&mgAPIKey, "mg-api-key", os.Getenv("MAILGUN_API_KEY"), "Mailgun API key")
 
 	if err := database.NewConnection(host, port, user, pass, name); err != nil {
 		log.Fatal(err)
 	}
+
+	mail.CreateInstance(mgAPIKey)
 	r, err := handlers.CreateRouter()
 	if err != nil {
 		log.Fatalf("fatal: cannot create router: %s\n", err)

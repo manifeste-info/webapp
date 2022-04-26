@@ -1,5 +1,7 @@
 package config
 
+import "os"
+
 const DateTimeFormat = "02/01/2006 15:04"
 
 const SessionCookieName = "m_session_cookie"
@@ -9,3 +11,9 @@ const MinPasswordLen = 8
 
 // Custom error messages
 const ErrEventDoesNotExist = "event does not exist"
+
+// Mails
+var MailDomain = os.Getenv("MAILGUN_SEND_DOMAIN")
+
+const MailSender = "noreply@manifeste.info"
+const MailValidationSubject = "Confirmation du compte"
