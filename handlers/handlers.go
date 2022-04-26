@@ -378,6 +378,7 @@ func accountPage(c *gin.Context) {
 		log.Printf("error: cannot get user infos: %s\n", err)
 		return
 	}
+	p.Name = strings.Title(p.Name)
 
 	// get user id to list all its events
 	p.UserID, err = users.GetUserID(sessionToken)
