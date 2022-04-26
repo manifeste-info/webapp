@@ -19,7 +19,7 @@ func CreateAccount(firstname, lastname, email, password string) error {
 
 // add adds a user in the database
 func add(firstname, lastname, email, hash string) error {
-	_, err := database.DB.Query(`INSERT INTO users (id, email, first_name, last_name, password_hash, is_admin) values (1000000000000*random(), $1, $2, $3, $4, false);`,
+	_, err := database.DB.Query(`INSERT INTO users (id, email, first_name, last_name, password_hash, is_admin, has_confirmed_account) values (1000000000000*random(), $1, $2, $3, $4, false, false);`,
 		email, firstname, lastname, hash)
 	return err
 }
@@ -124,4 +124,15 @@ func GetNumOfBannedUsers() (int, error) {
 func Ban(id string) error {
 	_, err := database.DB.Query(`UPDATE users SET password_hash=$2 WHERE id=$1;`, id, "banned")
 	return err
+}
+
+// HasConfirmedAccount returns true if the user account is confirmed, false
+// otherwise. It also returns an error in case of failure
+func HasConfirmedAccount(id string) (bool, error) {
+	row := database.DB.QueryRow(`SELECT has_confirmed_account FROM users WHERE id=$1;`, id)
+	var b bool
+	if err := row.Scan(&b); err != nil {
+		return false, err
+	}
+	return b, nil
 }

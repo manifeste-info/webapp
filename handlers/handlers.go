@@ -351,11 +351,12 @@ func accountPage(c *gin.Context) {
 		Error  bool
 		ErrMsg string
 
-		Name      string
-		UserID    string
-		IsAdmin   bool
-		HasEvents bool
-		Events    []events.Event
+		Name                string
+		UserID              string
+		IsAdmin             bool
+		HasEvents           bool
+		HasConfirmedAccount bool
+		Events              []events.Event
 	}
 	p := page{}
 
@@ -413,6 +414,16 @@ func accountPage(c *gin.Context) {
 	if len(p.Events) != 0 {
 		p.HasEvents = true
 	}
+
+	p.HasConfirmedAccount, err = users.HasConfirmedAccount(p.UserID)
+	if err != nil {
+		p.Error = true
+		p.ErrMsg = "Une erreur est survenue lors de la récupération de tes informations."
+		c.HTML(http.StatusInternalServerError, "account.html", p)
+		log.Printf("error: cannot get user accout confirmation: %s\n", err)
+		return
+	}
+
 	c.HTML(http.StatusOK, "account.html", p)
 }
 
@@ -452,7 +463,55 @@ func disconnectPage(c *gin.Context) {
 	This handler serves the form to create a new event.
 */
 func newPage(c *gin.Context) {
-	c.HTML(http.StatusOK, "new.html", nil)
+	var err error
+	type page struct {
+		// in case of error
+		Error  bool
+		ErrMsg string
+
+		// in case of success
+		Success bool
+
+		HasConfirmedAccount bool
+
+		City        string `form:"city"`
+		Address     string `form:"address"`
+		Description string `form:"description"`
+		Date        string `form:"date"`
+		Time        string `form:"time"`
+		Organizer   string `form:"organizer"`
+		Link        string `form:"link"`
+	}
+	var p page
+
+	sessionToken, err := c.Cookie(config.SessionCookieName)
+	if err != nil {
+		p.Error = true
+		p.ErrMsg = "Il semblerait que tu sois déconnecté·e."
+		c.HTML(http.StatusUnauthorized, "new.html", p)
+		log.Printf("error: cannot get user cookie: %s\n", err)
+		return
+	}
+
+	uid, err := users.GetUserID(sessionToken)
+	if err != nil {
+		p.Error = true
+		p.ErrMsg = "Une erreur est survenue."
+		c.HTML(http.StatusUnauthorized, "new.html", p)
+		log.Printf("error: cannot get user id: %s\n", err)
+		return
+	}
+
+	p.HasConfirmedAccount, err = users.HasConfirmedAccount(uid)
+	if err != nil {
+		p.Error = true
+		p.ErrMsg = "Une erreur est survenue."
+		c.HTML(http.StatusUnauthorized, "new.html", p)
+		log.Printf("error: cannot check if user hsa confirmed its account: %s\n", err)
+		return
+	}
+
+	c.HTML(http.StatusOK, "new.html", p)
 }
 
 /*
@@ -469,6 +528,8 @@ func newProcess(c *gin.Context) {
 
 		// in case of success
 		Success bool
+
+		HasConfirmedAccount bool
 
 		City        string `form:"city"`
 		Address     string `form:"address"`
@@ -514,16 +575,27 @@ func newProcess(c *gin.Context) {
 		return
 	}
 
-	// create the event in the database
-	if err := events.Create(p.City, p.Address, p.Date, p.Time, p.Description, p.Organizer, p.Link, id); err != nil {
+	p.HasConfirmedAccount, err = users.HasConfirmedAccount(id)
+	if err != nil {
 		p.Error = true
-		p.ErrMsg = "Une erreur est survenue, impossible de créer l'évènement."
-		c.HTML(http.StatusInternalServerError, "new.html", p)
-		log.Printf("error: cannot create event id: %s\n", err)
+		p.ErrMsg = "Une erreur est survenue."
+		c.HTML(http.StatusUnauthorized, "new.html", p)
+		log.Printf("error: cannot check if user hsa confirmed its account: %s\n", err)
 		return
 	}
 
-	p.Success = true
+	if p.HasConfirmedAccount {
+		// create the event in the database
+		if err := events.Create(p.City, p.Address, p.Date, p.Time, p.Description, p.Organizer, p.Link, id); err != nil {
+			p.Error = true
+			p.ErrMsg = "Une erreur est survenue, impossible de créer l'évènement."
+			c.HTML(http.StatusInternalServerError, "new.html", p)
+			log.Printf("error: cannot create event id: %s\n", err)
+			return
+		}
+		p.Success = true
+	}
+
 	c.HTML(http.StatusOK, "new.html", p)
 }
 

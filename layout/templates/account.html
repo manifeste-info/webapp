@@ -15,9 +15,17 @@
     <h1>Bienvenue, {{.Name}} 👋 </h1>
   {{end}}
 </div>
+{{if .HasConfirmedAccount}}
 <div class="container mt-5">
   <a href="/moncompte/nouveau"><button type="button" class="btn btn-primary btn-lg">Publier un nouvel évènement</button></a>
 </div>
+{{else}}
+<div class="container mt-5">
+  <div class="alert alert-warning" role="alert">
+    Tu dois confirmer ton adresse email pour créer un évènement.
+  </div>
+</div>
+{{end}}
 {{if .HasEvents}}
 <script>
   function clicked(e)
