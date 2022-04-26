@@ -1,0 +1,20 @@
+{{template "_head.html"}}
+
+<div class="container mt-5">
+  <h1>Manifeste !</h1>
+  <p class="lead">Trouve une manifestation pour une cause en laquelle tu crois, près de chez toi.</p>
+</div>
+
+<div class="container mt-5">
+  <form action="/recherche" method="GET">
+    <input class="form-control form-control-lg" list="datalistOptions" id="ville" name="ville" placeholder="Rechercher une ville...">
+    <datalist id="datalistOptions">
+      {{range .Cities}}
+      <option value="{{.}}">
+      {{end}}
+    </datalist>
+    <div>
+      <button type="submit" class="btn btn-primary mt-2">Allons-y !</button>
+    </div>
+  </form>
+</div>

@@ -1,0 +1,41 @@
+{{template "_head.html"}}
+
+{{if .Error}}
+<div class="container mt-5">
+  <div class="alert alert-warning" role="alert">
+    <strong>Erreur !</strong> {{.ErrMsg}}
+  </div>
+</div>
+{{else}}
+<div class="container mt-5">
+  {{if .IsAdmin}}
+    <h1>Bienvenue, {{.Name}} 👋 <span class="badge badge-pill badge-info">admin</span></h1>
+    <p><a href="/admin/dashboard">Dashboard d'admin</a></p>
+  {{else}}
+    <h1>Bienvenue, {{.Name}} 👋 </h1>
+  {{end}}
+</div>
+<div class="container mt-5">
+  <a href="/moncompte/nouveau"><button type="button" class="btn btn-primary btn-lg">Publier un nouvel évènement</button></a>
+</div>
+{{if .HasEvents}}
+<script>
+  function clicked(e)
+  {
+      if(!confirm("L'évènement sera définitivement supprimé. Continuer ?")) {
+          e.preventDefault();
+      }
+  }
+</script>
+<div class="container mt-5">
+  <h3>Tes évènements</h3>
+  <ul>
+    {{range .Events}}
+    <div class="container mt-3">
+      <li>À {{.City}} le {{.Date}}, ayant lieu {{.Address}}</li><a href="/moncompte/maj/{{.ID}}"><button type="button" class="btn btn-outline-secondary btn-sm">Éditer</button></a> <a href="/moncompte/supprimer/{{.ID}}"><button type="button" onclick="clicked(event)" class="btn btn-outline-danger btn-sm">Supprimer</button></a>
+    </div>
+    {{end}}
+  </ul>
+</div>
+{{end}}
+{{end}}

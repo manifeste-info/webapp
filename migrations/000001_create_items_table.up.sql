@@ -1,0 +1,11 @@
+CREATE TABLE IF NOT EXISTS events(
+  id BIGSERIAL PRIMARY KEY,
+  city VARCHAR(100) NOT NULL,
+  date TIMESTAMP NOT NULL,
+  address TEXT NOT NULL,
+  description TEXT NOT NULL,
+  organizer TEXT NOT NULL,
+  link TEXT,
+  created_by BIGSERIAL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

@@ -1,0 +1,93 @@
+{{template "_head.html"}}
+
+{{if .Success}}
+<div class="container mt-5">
+  <div class="alert alert-success alert-dismissible fade show" role="alert">
+    <strong>Succès !</strong> {{.SuccessMsg}}
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+</div>
+{{end}}
+{{if .Error}}
+<div class="container mt-5">
+  <div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <strong>Erreur !</strong> {{.ErrMsg}}
+    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+</div>
+{{end}}
+{{if .IsAdmin}}
+  <script>
+    function delEvent(e)
+    {
+        if(!confirm("L'évènement sera définitivement supprimé. Continuer ?")) {
+            e.preventDefault();
+        }
+    }
+    function banUser(e)
+    {
+        if(!confirm("L'utilisateur·rice sera définitievement banni·e. Continuer ?")) {
+            e.preventDefault();
+        }
+    }
+  </script>
+
+  <div class="container mt-5">
+    <h1>Dashboard d'admin ⚖</h1>
+  </div>
+
+  <div class="container mt-5">
+    <h2>Données</h2>
+    <button type="button" class="btn btn-secondary btn-sm">
+      Nombre total d'events <span class="badge badge-light">{{.NumOfEvents}}</span>
+    </button>
+    <button type="button" class="btn btn-secondary btn-sm">
+      Nombre total d'users <span class="badge badge-light">{{.NumOfUsers}}</span>
+    </button>
+    <button type="button" class="btn btn-warning btn-sm">
+      Nombre d'users bannis <span class="badge badge-light">{{.NumOfBannedUsers}}</span>
+    </button>
+  </div>
+  <div class="container mt-5">
+    <h2>Modérer un évènement</h2>
+      <form action="/admin/evenement" method="POST">
+        <div class="form-group row">
+          <label for="eventID" class="col-sm-1 col-form-label">Event ID</label>
+          <div class="col-sm-5">
+            <input type="text" class="form-control" name="eventID" id="eventID" placeholder="123456789">
+          </div>
+        </div>
+        <div class="form-group row">
+          <div class="col-sm-10">
+            <button type="submit" name="action" value="modifier" class="btn btn-primary">Modfier</button>
+            <button type="submit" name="action" value="supprimer" class="btn btn-outline-danger" onclick="delEvent(event)">Supprimer</button>
+          </div>
+        </div>
+      </form>
+  </div>
+
+  <div class="container mt-5">
+    <h2>Modérer un·e utilisateur·rice</h2>
+      <form action="/admin/utilisateur" method="POST">
+        <div class="form-group row">
+          <label for="userID" class="col-sm-1 col-form-label">User ID</label>
+          <div class="col-sm-5">
+            <input type="text" class="form-control" name="userID" id="userID" placeholder="123456789">
+          </div>
+        </div>
+        <div class="form-group row">
+          <div class="col-sm-10">
+            <button type="submit" name="action" value="supprimer" class="btn btn-outline-danger" onclick="banUser(event)">Bannir</button>
+          </div>
+        </div>
+      </form>
+  </div>
+{{else}}
+  <div class="container mt-5">
+    <h1>Tu n'as pas les permissions d'accéder à cette page.</h1>
+  </div>
+{{end}}
