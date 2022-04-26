@@ -169,7 +169,33 @@ func searchPage(c *gin.Context) {
 	This handler returns the connection form
 */
 func connectionPage(c *gin.Context) {
-	c.HTML(http.StatusOK, "connection.html", nil)
+	type page struct {
+		// in case of error
+		Error  bool
+		ErrMsg string
+
+		// in case of success
+		Success bool
+
+		// in case of message, not used in this handler as it is primary if you are
+		// already connected
+		HasMsg bool
+		Msg    string
+	}
+	var p page
+
+	sessionToken, err := c.Cookie(config.SessionCookieName)
+	if err != nil {
+		p.Error = true
+		p.ErrMsg = "Une erreur est survenue."
+		log.Printf("error: cannot get user cookie: %s\n", err)
+	}
+
+	if sessionToken != "" {
+		p.HasMsg = auth.IsAuthenticated(sessionToken)
+		p.Msg = "Tu es déjà connecté·e."
+	}
+	c.HTML(http.StatusOK, "connection.html", p)
 }
 
 /*
@@ -186,6 +212,11 @@ func connectionProcess(c *gin.Context) {
 
 		// in case of success
 		Success bool
+
+		// in case of message, not used in this handler as it is primary if you are
+		// already connected
+		HasMsg bool
+		Msg    string
 	}
 	p := page{}
 

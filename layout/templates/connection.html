@@ -19,6 +19,14 @@
 </div>
 {{end}}
 
+{{if .HasMsg}}
+<div class="container mt-5">
+  <div class="alert alert-info" role="alert">
+    {{.Msg}}
+  </div>
+</div>
+{{end}}
+
 <div class="container mt-5">
   <form action="connexion" method="POST">
     <div class="form-group row">
