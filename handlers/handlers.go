@@ -203,16 +203,11 @@ func connectionPage(c *gin.Context) {
 	var p page
 
 	sessionToken, err := c.Cookie(config.SessionCookieName)
-	if err != nil {
-		p.Error = true
-		p.ErrMsg = "Une erreur est survenue."
-		log.Printf("error: cannot get user cookie: %s\n", err)
-	}
-
-	if sessionToken != "" {
+	if err == nil && sessionToken != "" {
 		p.HasMsg = auth.IsAuthenticated(sessionToken)
 		p.Msg = "Tu es déjà connecté·e."
 	}
+
 	c.HTML(http.StatusOK, "connection.html", p)
 }
 
