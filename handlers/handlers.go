@@ -91,7 +91,11 @@ func healthPage(c *gin.Context) {
 	This page returns the security.txt file
 */
 func securityTxtPage(c *gin.Context) {
-	c.HTML(http.StatusOK, "security.txt.html", nil)
+	page := `Contact: mailto:security@manifeste.info
+Expires: 2024-05-01T13:37:00.000Z
+Preferred-Languages: fr, en
+Canonical: https://manifeste.info/security.txt`
+	c.String(http.StatusOK, page)
 }
 
 /*
