@@ -35,6 +35,7 @@ func CreateRouter() (*gin.Engine, error) {
 	r.GET("/", homePage)
 	r.GET("/health", healthPage)
 	r.GET("/security.txt", securityTxtPage)
+	r.GET("/robots.txt", robotsTxtPage)
 	r.GET("/apropos", aboutPage)
 	r.GET("/recherche", searchPage)
 	r.GET("/connexion", connectionPage)
@@ -91,6 +92,17 @@ func healthPage(c *gin.Context) {
 */
 func securityTxtPage(c *gin.Context) {
 	c.HTML(http.StatusOK, "security.txt.html", nil)
+}
+
+/*
+	Robots.txt page handler
+
+	This handler returns the robots.txt file
+*/
+func robotsTxtPage(c *gin.Context) {
+	page := `User-Agent: *
+Disallow: /admin/`
+	c.String(http.StatusOK, page)
 }
 
 /*
