@@ -124,9 +124,12 @@ func homePage(c *gin.Context) {
 	}
 	p := page{}
 
-	p.HasMessage = true
-	p.MessageTitle = "🚧 Attention."
-	p.Message = "Manifeste.info est actuellement en phase de développement, aucune donnée ne sera persistée."
+	if config.UnderDevelopment {
+		p.HasMessage = true
+		p.MessageTitle = "🚧 Attention."
+		p.Message = "Manifeste.info est actuellement en phase de développement, aucune donnée ne sera persistée."
+	}
+
 	// todo: better error handling
 	// if the following fails, it is not critical. Should we display an error?
 	p.Cities, err = events.GetCitiesWithEvents()

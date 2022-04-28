@@ -6,6 +6,7 @@ import (
 
 	"github.com/namsral/flag"
 
+	"github.com/manifeste-info/webapp/config"
 	"github.com/manifeste-info/webapp/database"
 	"github.com/manifeste-info/webapp/handlers"
 	"github.com/manifeste-info/webapp/mail"
@@ -21,6 +22,7 @@ func main() {
 	fs.StringVar(&pass, "db-pass", os.Getenv("POSTGRES_PASSWORD"), "Database pass")
 	fs.StringVar(&name, "db-name", os.Getenv("POSTGRES_DB"), "Database name")
 	fs.StringVar(&mgAPIKey, "mg-api-key", os.Getenv("MAILGUN_API_KEY"), "Mailgun API key")
+	fs.BoolVar(&config.UnderDevelopment, "dev", false, "Display under development banner")
 
 	if err := database.NewConnection(host, port, user, pass, name); err != nil {
 		log.Fatal(err)
