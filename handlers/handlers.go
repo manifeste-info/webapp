@@ -467,21 +467,22 @@ func accountPage(c *gin.Context) {
 func disconnectPage(c *gin.Context) {
 	type page struct {
 		Success bool
+		Msg     string
 	}
 	var p page
 
 	sessionToken, err := c.Cookie(config.SessionCookieName)
 	if err != nil {
-		p.Success = false
+		p.Msg = "Une erreur est survenue."
 		c.HTML(http.StatusUnauthorized, "disconnect.html", p)
 		log.Printf("error: cannot get user cookie: %s\n", err)
 		return
 	}
 
 	if ok := auth.Disconnect(sessionToken); !ok {
-		p.Success = false
-		c.HTML(http.StatusInternalServerError, "disconnect.html", p)
-		log.Printf("error: cannot delete user cookie: %s\n", err)
+		p.Msg = "Tu n'es pas connecté·e."
+		c.HTML(http.StatusUnauthorized, "disconnect.html", p)
+		log.Printf("error: cannot delete user cookie\n")
 		return
 	}
 	p.Success = true
