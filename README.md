@@ -10,6 +10,11 @@ Create a `.env` file following the format:
 POSTGRES_USER=user
 POSTGRES_PASSWORD=password
 POSTGRES_DB=manifeste
+
+SES_SMTP_USER=xxx
+SES_SMTP_PASS=xxxxxxx
+SES_SMTP_HOST=email-smtp.xxxx.amazonaws.com
+SES_SMTP_PORT=587
 ```
 
 Then you can start the stack:

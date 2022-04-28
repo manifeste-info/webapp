@@ -1,17 +1,18 @@
 package mail
 
 import (
-	"context"
 	"fmt"
 	"log"
-	"time"
+	"os"
+	"strconv"
 
 	"github.com/google/uuid"
-	"github.com/mailgun/mailgun-go/v4"
 	"github.com/manifeste-info/webapp/config"
+	"gopkg.in/gomail.v2"
 )
 
-var mg *mailgun.MailgunImpl
+var d *gomail.Dialer
+var e sesInfo
 
 // the key is the token and the value is the email
 var pendingValidtionTokens map[string]user
@@ -21,10 +22,32 @@ type user struct {
 	sessionToken string
 }
 
-// CreateInstance creates a new mailgun instance
-func CreateInstance(apiKey string) {
-	mg = mailgun.NewMailgun(config.MailDomain, apiKey)
+type sesInfo struct {
+	sender     string
+	senderName string
+	smtpUser   string
+	smtpPass   string
+	host       string
+	port       int
+}
+
+// CreateInstance creates a new mail instance
+func CreateInstance(apiKey string) error {
+	port, err := strconv.Atoi(os.Getenv("SES_SMTP_PORT"))
+	if err != nil {
+		return err
+	}
+	e = sesInfo{
+		sender:     config.MailSender,
+		senderName: config.MailSenderName,
+		smtpUser:   os.Getenv("SES_SMTP_USER"),
+		smtpPass:   os.Getenv("SES_SMTP_PASS"),
+		host:       os.Getenv("SES_SMTP_HOST"),
+		port:       port,
+	}
+	d = gomail.NewDialer(e.host, e.port, e.smtpUser, e.smtpPass)
 	pendingValidtionTokens = make(map[string]user)
+	return nil
 }
 
 // SendConfirmationToken creates a confirmation token, adds it to a pending
@@ -37,18 +60,20 @@ func SendConfirmationToken(email, sessionToken string) error {
 	}
 	log.Printf("user '%s' has been attributed validation token '%s'\n", email, token)
 
-	// send the mail with a 10 sec timeout
-	url := "https://manifeste.info/moncompte/confirmation/" + token
-	body := fmt.Sprintf("Bonjour !\nVoilà le lien pour confirmer et terminer la création de ton compte Manifeste :\n\n%s\n\nÀ bientôt !\n\nL'équipe Manifeste.", url)
-	msg := mg.NewMessage(config.MailSender, config.MailValidationSubject, body, email)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
-	defer cancel()
+	to := []string{email}
+	m := gomail.NewMessage()
+	m.SetBody("text/html", buildConfirmationBody(token))
+	m.SetHeaders(map[string][]string{
+		"From":    {m.FormatAddress(e.sender, e.senderName)},
+		"To":      to,
+		"Subject": {config.MailValidationSubject},
+	})
 
-	_, id, err := mg.Send(ctx, msg)
-	if err != nil {
+	if err := d.DialAndSend(m); err != nil {
 		return err
 	}
-	log.Printf("sent confirmation email to '%s', email id is '%s', validation token is '%s'\n", email, id, token)
+
+	log.Printf("sent confirmation email to '%s', validation token is '%s'\n", email, token)
 
 	// add the token to the pendingValidationTokens map
 	pendingValidtionTokens[token] = u
@@ -67,4 +92,14 @@ func ValidateConfirmationToken(token string) bool {
 	log.Printf("user '%s' confirmed its account with token '%s'\n", u.email, token)
 	delete(pendingValidtionTokens, token)
 	return true
+}
+
+func buildConfirmationBody(token string) string {
+	url := "https://manifeste.info/moncompte/confirmation/" + token
+	return fmt.Sprintf(`Bonjour,
+<br><br>
+Voilà le lien pour valider ton adresse mail: <a href="%s">%s</a>.
+<br><br>
+À bientôt sur Manifeste.info !
+`, url, url)
 }
