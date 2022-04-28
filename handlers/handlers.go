@@ -1252,6 +1252,6 @@ func confirmationProcess(c *gin.Context) {
 
 	p.HasConfirmedAccount = true
 	p.HasMsg = true
-	p.Msg = "Ton compte a été validé ! Tu peux dorénavant publier des évènements."
+	p.Msg = "Ton adresse email a été validée ! Tu peux dorénavant publier des évènements."
 	c.HTML(http.StatusOK, "account.html", p)
 }

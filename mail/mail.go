@@ -38,7 +38,7 @@ func SendConfirmationToken(email, sessionToken string) error {
 	log.Printf("user '%s' has been attributed validation token '%s'\n", email, token)
 
 	// send the mail with a 10 sec timeout
-	url := "https://manifeste.info/moncompte/validation/" + token
+	url := "https://manifeste.info/moncompte/confirmation/" + token
 	body := fmt.Sprintf("Bonjour !\nVoilà le lien pour confirmer et terminer la création de ton compte Manifeste :\n\n%s\n\nÀ bientôt !\n\nL'équipe Manifeste.", url)
 	msg := mg.NewMessage(config.MailSender, config.MailValidationSubject, body, email)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
