@@ -117,10 +117,16 @@ Disallow: /admin/`
 func homePage(c *gin.Context) {
 	var err error
 	type page struct {
-		Cities []string
+		HasMessage   bool
+		MessageTitle string
+		Message      string
+		Cities       []string
 	}
 	p := page{}
 
+	p.HasMessage = true
+	p.MessageTitle = "🚧 Attention."
+	p.Message = "Manifeste.info est actuellement en phase de développement, aucune donnée ne sera persistée."
 	// todo: better error handling
 	// if the following fails, it is not critical. Should we display an error?
 	p.Cities, err = events.GetCitiesWithEvents()
@@ -156,7 +162,7 @@ func searchPage(c *gin.Context) {
 	}
 	var p page
 
-	city := c.Query("ville")
+	city := strings.Title(c.Query("ville"))
 	if city == "" {
 		p.ErrMsg = "Aucune ville n'a été donnée en paramètre."
 		c.HTML(http.StatusNotFound, "search.html", p)
