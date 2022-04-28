@@ -2,6 +2,7 @@ package users
 
 import (
 	"log"
+	"strings"
 
 	"github.com/manifeste-info/webapp/auth"
 	"github.com/manifeste-info/webapp/database"
@@ -24,9 +25,25 @@ func add(firstname, lastname, email, hash string) error {
 	return err
 }
 
-// CheckIfExists checks if a user already exists in the database
+// CheckIfExists checks if a user already exists in the database. It detects if
+// the emails contains a +. If it is the case and if the fixed part is already
+// present, it returns false
 func CheckIfExists(email string) (bool, error) {
-	row := database.DB.QueryRow(`SELECT COUNT(*) FROM users WHERE email=$1;`, email)
+	// split the email address in two: local and domain
+	parts := strings.Split(email, "@")
+	local, domain := parts[0], parts[1]
+
+	// split the local part in two and keep the fixed part
+	var fixed, pattern string
+	if strings.Contains(local, "+") {
+		localparts := strings.Split(local, "+")
+		fixed = localparts[0]
+		pattern = fixed + "%@" + domain
+	} else {
+		pattern = local + "%@" + domain
+	}
+
+	row := database.DB.QueryRow(`SELECT COUNT(*) FROM users WHERE email LIKE $1;`, pattern)
 
 	var i int
 	if err := row.Scan(&i); err != nil {
