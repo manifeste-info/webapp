@@ -32,7 +32,7 @@ type sesInfo struct {
 }
 
 // CreateInstance creates a new mail instance
-func CreateInstance(apiKey string) error {
+func CreateInstance() error {
 	port, err := strconv.Atoi(os.Getenv("SES_SMTP_PORT"))
 	if err != nil {
 		return err

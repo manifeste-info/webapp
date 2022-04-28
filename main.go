@@ -14,21 +14,19 @@ import (
 
 func main() {
 	var host, port, user, pass, name string
-	var mgAPIKey string
 	fs := flag.NewFlagSetWithEnvPrefix(os.Args[0], "MANIFESTE", 0)
 	fs.StringVar(&host, "db-host", "postgres", "Database host")
 	fs.StringVar(&port, "db-port", "5432", "Database port")
 	fs.StringVar(&user, "db-user", os.Getenv("POSTGRES_USER"), "Database user")
 	fs.StringVar(&pass, "db-pass", os.Getenv("POSTGRES_PASSWORD"), "Database pass")
 	fs.StringVar(&name, "db-name", os.Getenv("POSTGRES_DB"), "Database name")
-	fs.StringVar(&mgAPIKey, "mg-api-key", os.Getenv("MAILGUN_API_KEY"), "Mailgun API key")
 	fs.BoolVar(&config.UnderDevelopment, "dev", false, "Display under development banner")
 
 	if err := database.NewConnection(host, port, user, pass, name); err != nil {
 		log.Fatal(err)
 	}
 
-	mail.CreateInstance(mgAPIKey)
+	mail.CreateInstance()
 	r, err := handlers.CreateRouter()
 	if err != nil {
 		log.Fatalf("fatal: cannot create router: %s\n", err)
