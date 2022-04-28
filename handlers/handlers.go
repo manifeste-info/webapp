@@ -1051,7 +1051,7 @@ func adminEventProcess(c *gin.Context) {
 	}
 
 	switch action {
-	case "supprimer":
+	case "delete":
 		if err = events.Delete(eventID); err != nil {
 			p.Error = true
 			p.ErrMsg = fmt.Sprintf("Une erreur est survenue: %s", err)
@@ -1064,7 +1064,7 @@ func adminEventProcess(c *gin.Context) {
 		p.SuccessMsg = "L'évènement a été supprimé avec succès."
 		log.Printf("admin: deleted eventID '%s'\n", eventID)
 		c.HTML(http.StatusOK, "admin.html", p)
-	case "modifier":
+	case "edit":
 		p.Event, err = events.GetEventByID(eventID, false)
 		if err != nil {
 			p.Error = true
@@ -1100,7 +1100,7 @@ func adminUserProcess(c *gin.Context) {
 	var err error
 
 	userID := c.PostForm("userID")
-	log.Printf("admin: banning userID: %s\n", userID)
+	action := c.PostForm("action")
 
 	type page struct {
 		// in case of error
@@ -1155,18 +1155,36 @@ func adminUserProcess(c *gin.Context) {
 		return
 	}
 
-	if err := users.Ban(userID); err != nil {
-		p.Error = true
-		p.ErrMsg = fmt.Sprintf("Une erreur est survenue: %s", err)
-		c.HTML(http.StatusInternalServerError, "admin.html", p)
-		log.Printf("error: admin: cannot ban userID '%s': %s\n", userID, err)
-		return
-	}
+	switch action {
+	case "ban":
+		log.Printf("admin: banning userID: %s\n", userID)
+		if err := users.Ban(userID); err != nil {
+			p.Error = true
+			p.ErrMsg = fmt.Sprintf("Une erreur est survenue: %s", err)
+			c.HTML(http.StatusInternalServerError, "admin.html", p)
+			log.Printf("error: admin: cannot ban userID '%s': %s\n", userID, err)
+			return
+		}
 
-	p.Success = true
-	p.SuccessMsg = "L'utilisateur·rice a été banni."
-	log.Printf("admin: banned userID '%s'\n", userID)
-	c.HTML(http.StatusOK, "admin.html", p)
+		p.Success = true
+		p.SuccessMsg = "L'utilisateur·rice a été banni."
+		log.Printf("admin: banned userID '%s'\n", userID)
+		c.HTML(http.StatusOK, "admin.html", p)
+	case "validate":
+		log.Printf("admin: validating userID: %s\n", userID)
+		if err := users.ValidateAccount(userID); err != nil {
+			p.Error = true
+			p.ErrMsg = fmt.Sprintf("Une erreur est survenue: %s", err)
+			c.HTML(http.StatusInternalServerError, "admin.html", p)
+			log.Printf("error: admin: cannot validate userID '%s': %s\n", userID, err)
+			return
+		}
+
+		p.Success = true
+		p.SuccessMsg = "L'utilisateur·rice a été validé."
+		log.Printf("admin: validated userID '%s'\n", userID)
+		c.HTML(http.StatusOK, "admin.html", p)
+	}
 }
 
 /*
