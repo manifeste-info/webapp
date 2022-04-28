@@ -26,7 +26,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	mail.CreateInstance()
+	if err := mail.CreateInstance(); err != nil {
+		log.Fatalf("fatal: cannot create mail instance: %s\n", err)
+	}
 	r, err := handlers.CreateRouter()
 	if err != nil {
 		log.Fatalf("fatal: cannot create router: %s\n", err)
