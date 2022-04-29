@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -24,6 +25,15 @@ func CreateRouter() (*gin.Engine, error) {
 	rate, err := limiter.NewRateFromFormatted("10-S")
 	if err != nil {
 		return r, err
+	}
+
+	// if under development, use basic auth on all routes
+	if config.UnderDevelopment {
+		r.Use(gin.BasicAuth(
+			gin.Accounts{
+				os.Getenv("BASIC_AUTH_USER"): os.Getenv("BASIC_AUTH_PASS"),
+			},
+		))
 	}
 
 	store := memory.NewStore()
