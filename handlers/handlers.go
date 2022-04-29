@@ -1246,6 +1246,15 @@ func confirmationProcess(c *gin.Context) {
 		return
 	}
 
+	p.Name, _, _, err = users.GetUserInfos(uid)
+	if err != nil {
+		p.Error = true
+		p.ErrMsg = "Une erreur est survenue."
+		c.HTML(http.StatusInternalServerError, "account.html", p)
+		log.Printf("error: cannot validate user account with ID '%s': %s\n", uid, err)
+		return
+	}
+
 	if err := users.ValidateAccount(uid); err != nil {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue."
