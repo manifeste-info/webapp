@@ -31,6 +31,7 @@ func CreateRouter() (*gin.Engine, error) {
 	r.ForwardedByClientIP = true
 	r.Use(rateLimiterMiddleware)
 
+	r.NoRoute(notFoundPage)
 	r.LoadHTMLGlob("layout/templates/*.html")
 	r.GET("/", homePage)
 	r.GET("/health", healthPage)
@@ -73,6 +74,15 @@ func CreateRouter() (*gin.Engine, error) {
 	}
 
 	return r, nil
+}
+
+/*
+	Not found page handler
+
+	This handler is called when there is a 404 Not Found
+*/
+func notFoundPage(c *gin.Context) {
+	c.HTML(http.StatusNotFound, "notfound.html", nil)
 }
 
 /*
