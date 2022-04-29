@@ -20,7 +20,10 @@ func main() {
 	fs.StringVar(&user, "db-user", os.Getenv("POSTGRES_USER"), "Database user")
 	fs.StringVar(&pass, "db-pass", os.Getenv("POSTGRES_PASSWORD"), "Database pass")
 	fs.StringVar(&name, "db-name", os.Getenv("POSTGRES_DB"), "Database name")
-	fs.BoolVar(&config.UnderDevelopment, "dev", false, "Display under development banner")
+
+	if os.Getenv("GIN_MODE") != "release" {
+		config.UnderDevelopment = true
+	}
 
 	if err := database.NewConnection(host, port, user, pass, name); err != nil {
 		log.Fatal(err)
