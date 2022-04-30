@@ -47,6 +47,7 @@ func CreateRouter() (*gin.Engine, error) {
 	r.GET("/health", healthPage)
 	r.GET("/security.txt", securityTxtPage)
 	r.GET("/robots.txt", robotsTxtPage)
+	r.GET("/mentions-legales", legalPage)
 	r.GET("/apropos", aboutPage)
 	r.GET("/recherche", searchPage)
 	r.GET("/connexion", connectionPage)
@@ -127,6 +128,15 @@ func robotsTxtPage(c *gin.Context) {
 	page := `User-Agent: *
 Disallow: /admin/`
 	c.String(http.StatusOK, page)
+}
+
+/*
+	Legal page handler
+
+	This page returns the legal stuff needed
+*/
+func legalPage(c *gin.Context) {
+	c.HTML(http.StatusOK, "legal.html", nil)
 }
 
 /*
@@ -1271,7 +1281,7 @@ func confirmationProcess(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue."
 		c.HTML(http.StatusInternalServerError, "account.html", p)
-		log.Printf("error: cannot validate user account with ID '%s': %s\n", uid, err)
+		log.Printf("error: cannot get user account infos with ID '%s': %s\n", uid, err)
 		return
 	}
 

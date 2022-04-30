@@ -1,6 +1,7 @@
 package users
 
 import (
+	"fmt"
 	"log"
 	"strings"
 
@@ -60,8 +61,13 @@ func GetUserInfos(sessionToken string) (string, string, string, error) {
 		LastName  string `db:"last_name"`
 	}
 	var u user
-
+	log.Printf("getting user informations for session token: '%s'\n", sessionToken)
 	email := auth.GetEmailFromSessionToken(sessionToken)
+	log.Printf("retrieved email '%s' associated with token '%s'\n", email, sessionToken)
+
+	if email == "" {
+		return "", "", "", fmt.Errorf("error getting user infos for session token '%s': email address is empty", sessionToken)
+	}
 
 	rows, err := database.DB.Query(`SELECT first_name,last_name FROM users WHERE email=$1;`, email)
 	if err != nil {
