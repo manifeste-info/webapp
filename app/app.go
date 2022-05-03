@@ -196,7 +196,7 @@ func (a App) homePage(c *gin.Context) {
 	// if the following fails, it is not critical. Should we display an error?
 	p.Cities, err = events.GetCitiesWithEvents()
 	if err != nil {
-		log.Errorf("cannot get cities list: %s\n", err)
+		log.Errorf("cannot get cities list: %s", err)
 	}
 	c.HTML(http.StatusOK, "home.html", p)
 }
@@ -386,7 +386,7 @@ func registrationProcess(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue lors de la création du compte."
 		c.HTML(http.StatusInternalServerError, "register.html", p)
-		log.Errorf("cannot check if account exists: %s\n", err)
+		log.Errorf("cannot check if account exists: %s", err)
 		return
 	}
 
@@ -394,7 +394,7 @@ func registrationProcess(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = "Un compte avec cette adresse email existe déjà."
 		c.HTML(http.StatusInternalServerError, "register.html", p)
-		log.Errorf("account %s already in database\n", p.Email)
+		log.Errorf("account %s already in database", p.Email)
 		return
 	}
 
@@ -403,7 +403,7 @@ func registrationProcess(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue lors de la création du compte."
 		c.HTML(http.StatusInternalServerError, "register.html", p)
-		log.Errorf("cannot create account: %s\n", err)
+		log.Errorf("cannot create account: %s", err)
 		return
 	}
 
@@ -413,7 +413,7 @@ func registrationProcess(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue lors de la création du compte."
 		c.HTML(http.StatusUnauthorized, "register.html", p)
-		log.Errorf("cannot authenticate user: %s\n", err)
+		log.Errorf("cannot authenticate user: %s", err)
 		return
 	}
 
@@ -421,14 +421,14 @@ func registrationProcess(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue lors de l'envoi du mail de confirmation."
 		c.HTML(http.StatusInternalServerError, "register.html", p)
-		log.Errorf("cannot send confirmation token: %s\n", err)
+		log.Errorf("cannot send confirmation token: %s", err)
 		return
 	}
 
 	c.SetCookie(config.SessionCookieName, sessionToken, config.SessionCookieExpiry, "/", c.Request.URL.Hostname(), false, true)
 	p.Success = true
 	c.HTML(http.StatusOK, "register.html", p)
-	log.Printf("user %s created\n", p.Email)
+	log.Printf("user %s created", p.Email)
 }
 
 /*
@@ -462,7 +462,7 @@ func accountPage(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = "Il semblerait que tu aies été déconnecté·e."
 		c.HTML(http.StatusUnauthorized, "account.html", p)
-		log.Errorf("cannot find session token: %s\n", err)
+		log.Errorf("cannot find session token: %s", err)
 		return
 	}
 
@@ -472,7 +472,7 @@ func accountPage(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue lors de la récupération de tes informations."
 		c.HTML(http.StatusUnauthorized, "account.html", p)
-		log.Errorf("cannot get user infos: %s\n", err)
+		log.Errorf("cannot get user infos: %s", err)
 		return
 	}
 	p.Name = strings.Title(p.Name)
@@ -483,7 +483,7 @@ func accountPage(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue lors de la récupération de tes informations."
 		c.HTML(http.StatusUnauthorized, "account.html", p)
-		log.Errorf("cannot get user id: %s\n", err)
+		log.Errorf("cannot get user id: %s", err)
 		return
 	}
 
@@ -493,7 +493,7 @@ func accountPage(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue lors de la récupération de tes informations."
 		c.HTML(http.StatusUnauthorized, "account.html", p)
-		log.Errorf("cannot get user id: %s\n", err)
+		log.Errorf("cannot get user id: %s", err)
 		return
 	}
 
@@ -503,7 +503,7 @@ func accountPage(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue lors de la récupération de tes évènements."
 		c.HTML(http.StatusUnauthorized, "account.html", p)
-		log.Errorf("cannot get user events: %s\n", err)
+		log.Errorf("cannot get user events: %s", err)
 		return
 	}
 
@@ -516,7 +516,7 @@ func accountPage(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue lors de la récupération de tes informations."
 		c.HTML(http.StatusInternalServerError, "account.html", p)
-		log.Errorf("cannot get user accout confirmation: %s\n", err)
+		log.Errorf("cannot get user accout confirmation: %s", err)
 		return
 	}
 
@@ -540,14 +540,14 @@ func disconnectPage(c *gin.Context) {
 	if err != nil {
 		p.Msg = "Une erreur est survenue."
 		c.HTML(http.StatusUnauthorized, "disconnect.html", p)
-		log.Errorf("cannot get user cookie: %s\n", err)
+		log.Errorf("cannot get user cookie: %s", err)
 		return
 	}
 
 	if ok := auth.Disconnect(sessionToken); !ok {
 		p.Msg = "Tu n'es pas connecté·e."
 		c.HTML(http.StatusUnauthorized, "disconnect.html", p)
-		log.Errorf("cannot delete user cookie\n")
+		log.Errorf("cannot delete user cookie")
 		return
 	}
 	p.Success = true
@@ -586,7 +586,7 @@ func newPage(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = "Il semblerait que tu sois déconnecté·e."
 		c.HTML(http.StatusUnauthorized, "new.html", p)
-		log.Errorf("cannot get user cookie: %s\n", err)
+		log.Errorf("cannot get user cookie: %s", err)
 		return
 	}
 
@@ -595,7 +595,7 @@ func newPage(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue."
 		c.HTML(http.StatusUnauthorized, "new.html", p)
-		log.Errorf("cannot get user id: %s\n", err)
+		log.Errorf("cannot get user id: %s", err)
 		return
 	}
 
@@ -604,7 +604,7 @@ func newPage(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue."
 		c.HTML(http.StatusUnauthorized, "new.html", p)
-		log.Errorf("cannot check if user hsa confirmed its account: %s\n", err)
+		log.Errorf("cannot check if user hsa confirmed its account: %s", err)
 		return
 	}
 
@@ -642,7 +642,7 @@ func (a App) newProcess(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue lors de la récupération des informations."
 		c.HTML(http.StatusBadRequest, "new.html", p)
-		log.Errorf("cannot get event informations from new form: %s\n", err)
+		log.Errorf("cannot get event informations from new form: %s", err)
 		return
 	}
 
@@ -659,7 +659,7 @@ func (a App) newProcess(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = "Il semblerait que tu sois déconnecté·e."
 		c.HTML(http.StatusUnauthorized, "new.html", p)
-		log.Errorf("cannot get user cookie: %s\n", err)
+		log.Errorf("cannot get user cookie: %s", err)
 		return
 	}
 
@@ -668,7 +668,7 @@ func (a App) newProcess(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue."
 		c.HTML(http.StatusInternalServerError, "new.html", p)
-		log.Errorf("cannot get user id: %s\n", err)
+		log.Errorf("cannot get user id: %s", err)
 		return
 	}
 
@@ -677,7 +677,7 @@ func (a App) newProcess(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue."
 		c.HTML(http.StatusUnauthorized, "new.html", p)
-		log.Errorf("cannot check if user hsa confirmed its account: %s\n", err)
+		log.Errorf("cannot check if user hsa confirmed its account: %s", err)
 		return
 	}
 
@@ -687,7 +687,7 @@ func (a App) newProcess(c *gin.Context) {
 			p.Error = true
 			p.ErrMsg = "Une erreur est survenue, impossible de créer l'évènement."
 			c.HTML(http.StatusInternalServerError, "new.html", p)
-			log.Errorf("cannot create event id: %s\n", err)
+			log.Errorf("cannot create event id: %s", err)
 			return
 		}
 		p.Success = true
@@ -727,12 +727,12 @@ func eventPage(c *gin.Context) {
 		if err.Error() == config.ErrEventDoesNotExist {
 			p.ErrMsg = "Cet évènement n'existe pas ou plus."
 			c.HTML(http.StatusNotFound, "event.html", p)
-			log.Errorf("event with ID '%s' does not exist (anymore)\n", id)
+			log.Errorf("event with ID '%s' does not exist (anymore)", id)
 			return
 		}
 		p.ErrMsg = "Une erreur est survenue."
 		c.HTML(http.StatusNotFound, "event.html", p)
-		log.Errorf("event with ID '%s' can't be found: %s\n", id, err)
+		log.Errorf("event with ID '%s' can't be found: %s", id, err)
 		return
 	}
 	p.Event = e
@@ -774,7 +774,7 @@ func updatePage(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue lors de la récupération de l'évènement."
 		c.HTML(http.StatusInternalServerError, "update.html", p)
-		log.Errorf("cannot get event: %s\n", err)
+		log.Errorf("cannot get event: %s", err)
 		return
 	}
 
@@ -784,7 +784,7 @@ func updatePage(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = "Il semblerait que tu sois déconnecté·e."
 		c.HTML(http.StatusUnauthorized, "update.html", p)
-		log.Errorf("cannot get user cookie: %s\n", err)
+		log.Errorf("cannot get user cookie: %s", err)
 		return
 	}
 
@@ -793,7 +793,7 @@ func updatePage(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue."
 		c.HTML(http.StatusInternalServerError, "update.html", p)
-		log.Errorf("cannot get user id: %s\n", err)
+		log.Errorf("cannot get user id: %s", err)
 		return
 	}
 
@@ -801,7 +801,7 @@ func updatePage(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = "Il semblerait que tu n'aies pas créé cet évènement."
 		c.HTML(http.StatusUnauthorized, "update.html", p)
-		log.Errorf("user tries to update a event not created by him/her: uid: %s, eventID: %s, event created by: %s\n",
+		log.Errorf("user tries to update a event not created by him/her: uid: %s, eventID: %s, event created by: %s",
 			uid, p.Event.ID, p.Event.CreatedBy)
 		return
 	}
@@ -857,7 +857,7 @@ func updateProcess(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue lors de la récupération des informations."
 		c.HTML(http.StatusBadRequest, "update.html", p)
-		log.Errorf("cannot get event informations from update form: %s\n", err)
+		log.Errorf("cannot get event informations from update form: %s", err)
 		return
 	}
 
@@ -885,7 +885,7 @@ func updateProcess(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = "Il semblerait que tu sois déconnecté·e."
 		c.HTML(http.StatusUnauthorized, "update.html", p)
-		log.Errorf("cannot get user cookie: %s\n", err)
+		log.Errorf("cannot get user cookie: %s", err)
 		return
 	}
 
@@ -894,7 +894,7 @@ func updateProcess(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue."
 		c.HTML(http.StatusInternalServerError, "update.html", p)
-		log.Errorf("cannot get user id: %s\n", err)
+		log.Errorf("cannot get user id: %s", err)
 		return
 	}
 
@@ -903,7 +903,7 @@ func updateProcess(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue."
 		c.HTML(http.StatusInternalServerError, "update.html", p)
-		log.Errorf("cannot get created_by id: %s\n", err)
+		log.Errorf("cannot get created_by id: %s", err)
 		return
 	}
 
@@ -912,7 +912,7 @@ func updateProcess(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue."
 		c.HTML(http.StatusInternalServerError, "update.html", p)
-		log.Errorf("cannot check if user is admin: %s\n", err)
+		log.Errorf("cannot check if user is admin: %s", err)
 		return
 	}
 
@@ -920,7 +920,7 @@ func updateProcess(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = "Il semblerait que tu n'aies pas créé cet évènement."
 		c.HTML(http.StatusUnauthorized, "update.html", p)
-		log.Errorf("user tries to update a event not created by him/her: uid: %s, eventID: %s, event created by: %s\n",
+		log.Errorf("user tries to update a event not created by him/her: uid: %s, eventID: %s, event created by: %s",
 			uid, p.ID, createdBy)
 		return
 	}
@@ -931,7 +931,7 @@ func updateProcess(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue lors de la mise à jour de l'évènement"
 		c.HTML(http.StatusBadRequest, "update.html", p)
-		log.Errorf("cannot get event informations from update form: %s\n", err)
+		log.Errorf("cannot get event informations from update form: %s", err)
 		return
 	}
 
@@ -962,14 +962,14 @@ func deleteProcess(c *gin.Context) {
 	cookie, err := c.Cookie(config.SessionCookieName)
 	if err != nil {
 		c.HTML(http.StatusUnauthorized, "delete.html", p)
-		log.Errorf("cannot get user cookie: %s\n", err)
+		log.Errorf("cannot get user cookie: %s", err)
 		return
 	}
 
 	uid, err := users.GetUserID(cookie)
 	if err != nil {
 		c.HTML(http.StatusInternalServerError, "delete.html", p)
-		log.Errorf("cannot get user id: %s\n", err)
+		log.Errorf("cannot get user id: %s", err)
 		return
 	}
 
@@ -977,7 +977,7 @@ func deleteProcess(c *gin.Context) {
 	el, err := events.GetEventsByUserID(uid)
 	if err != nil {
 		c.HTML(http.StatusInternalServerError, "delete.html", p)
-		log.Errorf("cannot get user events: %s\n", err)
+		log.Errorf("cannot get user events: %s", err)
 		return
 	}
 
@@ -997,7 +997,7 @@ func deleteProcess(c *gin.Context) {
 
 	// delete event by event ID
 	if err := events.Delete(eventID); err != nil {
-		log.Errorf("cannot delete event '%s': %s\n", eventID, err)
+		log.Errorf("cannot delete event '%s': %s", eventID, err)
 		c.HTML(http.StatusInternalServerError, "delete.html", p)
 		return
 	}
@@ -1038,7 +1038,7 @@ func adminDashboardPage(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = fmt.Sprintf("Une erreur est survenue: %s", err)
 		c.HTML(http.StatusInternalServerError, "admin.html", p)
-		log.Errorf("admin: cannot get tot num of events: %s\n", err)
+		log.Errorf("admin: cannot get tot num of events: %s", err)
 		return
 	}
 
@@ -1047,7 +1047,7 @@ func adminDashboardPage(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = fmt.Sprintf("Une erreur est survenue: %s", err)
 		c.HTML(http.StatusInternalServerError, "admin.html", p)
-		log.Errorf("admin: cannot get tot num of users: %s\n", err)
+		log.Errorf("admin: cannot get tot num of users: %s", err)
 		return
 	}
 
@@ -1056,7 +1056,7 @@ func adminDashboardPage(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = fmt.Sprintf("Une erreur est survenue: %s", err)
 		c.HTML(http.StatusInternalServerError, "admin.html", p)
-		log.Errorf("admin: cannot get tot num of banned users: %s\n", err)
+		log.Errorf("admin: cannot get tot num of banned users: %s", err)
 		return
 	}
 
@@ -1075,7 +1075,7 @@ func adminEventProcess(c *gin.Context) {
 	action := c.PostForm("action")
 	eventID := c.PostForm("eventID")
 
-	log.Printf("admin: action: %s, event ID: %s\n", action, eventID)
+	log.Printf("admin: action: %s, event ID: %s", action, eventID)
 
 	type page struct {
 		// in case of error
@@ -1101,7 +1101,7 @@ func adminEventProcess(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = fmt.Sprintf("Une erreur est survenue: %s", err)
 		c.HTML(http.StatusInternalServerError, "admin.html", p)
-		log.Errorf("admin: cannot get tot num of events: %s\n", err)
+		log.Errorf("admin: cannot get tot num of events: %s", err)
 		return
 	}
 
@@ -1110,7 +1110,7 @@ func adminEventProcess(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = fmt.Sprintf("Une erreur est survenue: %s", err)
 		c.HTML(http.StatusInternalServerError, "admin.html", p)
-		log.Errorf("admin: cannot get tot num of users: %s\n", err)
+		log.Errorf("admin: cannot get tot num of users: %s", err)
 		return
 	}
 
@@ -1119,7 +1119,7 @@ func adminEventProcess(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = fmt.Sprintf("Une erreur est survenue: %s", err)
 		c.HTML(http.StatusInternalServerError, "admin.html", p)
-		log.Errorf("admin: cannot get tot num of banned users: %s\n", err)
+		log.Errorf("admin: cannot get tot num of banned users: %s", err)
 		return
 	}
 
@@ -1136,13 +1136,13 @@ func adminEventProcess(c *gin.Context) {
 			p.Error = true
 			p.ErrMsg = fmt.Sprintf("Une erreur est survenue: %s", err)
 			c.HTML(http.StatusInternalServerError, "admin.html", p)
-			log.Errorf("admin: cannot delete event '%s': %s\n", eventID, err)
+			log.Errorf("admin: cannot delete event '%s': %s", eventID, err)
 			return
 		}
 
 		p.Success = true
 		p.SuccessMsg = "L'évènement a été supprimé avec succès."
-		log.Printf("admin: deleted eventID '%s'\n", eventID)
+		log.Printf("admin: deleted eventID '%s'", eventID)
 		c.HTML(http.StatusOK, "admin.html", p)
 	case "edit":
 		p.Event, err = events.GetEventByID(eventID, false)
@@ -1150,7 +1150,7 @@ func adminEventProcess(c *gin.Context) {
 			p.Error = true
 			p.ErrMsg = fmt.Sprintf("Une erreur est survenue lors de la récupération de l'évènement: %s", err)
 			c.HTML(http.StatusInternalServerError, "admin.html", p)
-			log.Errorf("admin: cannot get event with id '%s': %s\n", eventID, err)
+			log.Errorf("admin: cannot get event with id '%s': %s", eventID, err)
 			return
 		}
 
@@ -1163,7 +1163,7 @@ func adminEventProcess(c *gin.Context) {
 		timeParts := strings.Split(parts[1], ":")
 		p.Event.Time = fmt.Sprintf("%s:%s", timeParts[0], timeParts[1])
 
-		log.Printf("admin: updating eventID '%s'\n", eventID)
+		log.Printf("admin: updating eventID '%s'", eventID)
 		c.HTML(http.StatusOK, "update.html", p)
 	}
 }
@@ -1206,7 +1206,7 @@ func adminUserProcess(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = fmt.Sprintf("Une erreur est survenue: %s", err)
 		c.HTML(http.StatusInternalServerError, "admin.html", p)
-		log.Errorf("admin: cannot get tot num of events: %s\n", err)
+		log.Errorf("admin: cannot get tot num of events: %s", err)
 		return
 	}
 
@@ -1215,7 +1215,7 @@ func adminUserProcess(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = fmt.Sprintf("Une erreur est survenue: %s", err)
 		c.HTML(http.StatusInternalServerError, "admin.html", p)
-		log.Errorf("admin: cannot get tot num of users: %s\n", err)
+		log.Errorf("admin: cannot get tot num of users: %s", err)
 		return
 	}
 
@@ -1224,7 +1224,7 @@ func adminUserProcess(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = fmt.Sprintf("Une erreur est survenue: %s", err)
 		c.HTML(http.StatusInternalServerError, "admin.html", p)
-		log.Errorf("admin: cannot get tot num of banned users: %s\n", err)
+		log.Errorf("admin: cannot get tot num of banned users: %s", err)
 		return
 	}
 
@@ -1237,32 +1237,32 @@ func adminUserProcess(c *gin.Context) {
 
 	switch action {
 	case "ban":
-		log.Printf("admin: banning userID: %s\n", userID)
+		log.Printf("admin: banning userID: %s", userID)
 		if err := users.Ban(userID); err != nil {
 			p.Error = true
 			p.ErrMsg = fmt.Sprintf("Une erreur est survenue: %s", err)
 			c.HTML(http.StatusInternalServerError, "admin.html", p)
-			log.Errorf("admin: cannot ban userID '%s': %s\n", userID, err)
+			log.Errorf("admin: cannot ban userID '%s': %s", userID, err)
 			return
 		}
 
 		p.Success = true
 		p.SuccessMsg = "L'utilisateur·rice a été banni."
-		log.Printf("admin: banned userID '%s'\n", userID)
+		log.Printf("admin: banned userID '%s'", userID)
 		c.HTML(http.StatusOK, "admin.html", p)
 	case "validate":
-		log.Printf("admin: validating userID: %s\n", userID)
+		log.Printf("admin: validating userID: %s", userID)
 		if err := users.ValidateAccount(userID); err != nil {
 			p.Error = true
 			p.ErrMsg = fmt.Sprintf("Une erreur est survenue: %s", err)
 			c.HTML(http.StatusInternalServerError, "admin.html", p)
-			log.Errorf("admin: cannot validate userID '%s': %s\n", userID, err)
+			log.Errorf("admin: cannot validate userID '%s': %s", userID, err)
 			return
 		}
 
 		p.Success = true
 		p.SuccessMsg = "L'utilisateur·rice a été validé."
-		log.Printf("admin: validated userID '%s'\n", userID)
+		log.Printf("admin: validated userID '%s'", userID)
 		c.HTML(http.StatusOK, "admin.html", p)
 	}
 }
@@ -1312,7 +1312,7 @@ func confirmationProcess(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue."
 		c.HTML(http.StatusInternalServerError, "account.html", p)
-		log.Errorf("cannot retrieve user ID: %s\n", err)
+		log.Errorf("cannot retrieve user ID: %s", err)
 		return
 	}
 
@@ -1321,7 +1321,7 @@ func confirmationProcess(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue."
 		c.HTML(http.StatusInternalServerError, "account.html", p)
-		log.Errorf("cannot get user account infos with ID '%s': %s\n", uid, err)
+		log.Errorf("cannot get user account infos with ID '%s': %s", uid, err)
 		return
 	}
 
@@ -1329,7 +1329,7 @@ func confirmationProcess(c *gin.Context) {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue."
 		c.HTML(http.StatusInternalServerError, "account.html", p)
-		log.Errorf("cannot validate user account with ID '%s': %s\n", uid, err)
+		log.Errorf("cannot validate user account with ID '%s': %s", uid, err)
 		return
 	}
 

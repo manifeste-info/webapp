@@ -1,8 +1,7 @@
 package auth
 
 import (
-	"log"
-
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -20,7 +19,7 @@ func Authenticate(email, password string) (string, error) {
 	}
 
 	sessionToken := createSession(email)
-	log.Printf("user %s logged in\n", email)
+	log.Infof("user '%s' logged in", email)
 	return sessionToken, nil
 }
 

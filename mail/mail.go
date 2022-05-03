@@ -58,7 +58,7 @@ func SendConfirmationToken(email, sessionToken string) error {
 		email:        email,
 		sessionToken: sessionToken,
 	}
-	log.Printf("user '%s' has been attributed validation token '%s'\n", email, token)
+	log.Printf("user '%s' has been attributed validation token '%s'", email, token)
 
 	to := []string{email}
 	m := gomail.NewMessage()
@@ -73,7 +73,7 @@ func SendConfirmationToken(email, sessionToken string) error {
 		return err
 	}
 
-	log.Printf("sent confirmation email to '%s', validation token is '%s'\n", email, token)
+	log.Printf("sent confirmation email to '%s', validation token is '%s'", email, token)
 
 	// add the token to the pendingValidationTokens map
 	pendingValidtionTokens[token] = u
@@ -89,7 +89,7 @@ func ValidateConfirmationToken(token string) bool {
 		return false
 	}
 
-	log.Printf("user '%s' confirmed its account with token '%s'\n", u.email, token)
+	log.Printf("user '%s' confirmed its account with token '%s'", u.email, token)
 	delete(pendingValidtionTokens, token)
 	return true
 }

@@ -45,13 +45,13 @@ func main() {
 	}
 
 	if err := mail.CreateInstance(); err != nil {
-		log.Fatalf("fatal: cannot create mail instance: %s\n", err)
+		log.Fatalf("fatal: cannot create mail instance: %s", err)
 	}
 	r, err := app.CreateRouter(a)
 	if err != nil {
-		log.Fatalf("fatal: cannot create router: %s\n", err)
+		log.Fatalf("fatal: cannot create router: %s", err)
 	}
 	if err := r.Run(); err != nil {
-		log.Fatalf("error: cannot run server: %s\n", err)
+		log.Fatalf("error: cannot run server: %s", err)
 	}
 }

@@ -13,6 +13,7 @@ require (
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/namsral/flag v1.7.4-pre
+	github.com/oklog/ulid v1.3.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/ulule/limiter/v3 v3.10.0
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
@@ -30,7 +31,6 @@ require (
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/parnurzeal/gorequest v0.2.16 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/smartystreets/goconvey v1.7.2 // indirect

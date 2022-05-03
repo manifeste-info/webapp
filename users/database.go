@@ -64,9 +64,9 @@ func GetUserInfos(sessionToken string) (string, string, string, error) {
 		LastName  string `db:"last_name"`
 	}
 	var u user
-	log.Printf("getting user informations for session token: '%s'\n", sessionToken)
+	log.Infof("getting user informations for session token: '%s'", sessionToken)
 	email := auth.GetEmailFromSessionToken(sessionToken)
-	log.Printf("retrieved email '%s' associated with token '%s'\n", email, sessionToken)
+	log.Infof("retrieved email '%s' associated with token '%s'", email, sessionToken)
 
 	if email == "" {
 		return "", "", "", fmt.Errorf("error getting user infos for session token '%s': email address is empty", sessionToken)
