@@ -29,7 +29,7 @@ func (s Slack) Send(p notifications.Payload) error {
 		AuthorName:    "Manifeste.Info",
 		AuthorSubname: "manifeste.info",
 		AuthorLink:    "https://manifeste.info",
-		Text:          "<!here> Un nouvel event a été créé",
+		Text:          "<!here> Un nouvel event a été créé.",
 		Ts:            json.Number(strconv.FormatInt(time.Now().Unix(), 10)),
 	}
 
