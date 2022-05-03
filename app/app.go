@@ -56,7 +56,7 @@ func CreateRouter(a App) (*gin.Engine, error) {
 	}
 
 	// if under development, use basic auth on all routes
-	if a.Environment == "production" {
+	if a.Environment == "development" {
 		user, pass := os.Getenv("BASIC_AUTH_USER"), os.Getenv("BASIC_AUTH_PASS")
 		if user == "" || pass == "" {
 			return nil, fmt.Errorf("basic auth is misconfigured: user or pass can't be empty")
