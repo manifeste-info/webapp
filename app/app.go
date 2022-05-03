@@ -40,9 +40,7 @@ func New(c config.Config) (App, error) {
 		return App{}, fmt.Errorf("notifier %s is not supported", c.Notifier)
 	}
 
-	if c.Env == "release" {
-		a.Environment = "production"
-	}
+	a.Environment = c.Env
 
 	return a, nil
 }
@@ -56,7 +54,7 @@ func CreateRouter(a App) (*gin.Engine, error) {
 	}
 
 	// if under development, use basic auth on all routes
-	if a.Environment == "development" {
+	if a.Environment != "release" {
 		user, pass := os.Getenv("BASIC_AUTH_USER"), os.Getenv("BASIC_AUTH_PASS")
 		if user == "" || pass == "" {
 			return nil, fmt.Errorf("basic auth is misconfigured: user or pass can't be empty")
@@ -1316,7 +1314,7 @@ func confirmationProcess(c *gin.Context) {
 		return
 	}
 
-	p.Name, _, _, err = users.GetUserInfos(uid)
+	p.Name, _, _, err = users.GetUserInfos(sessionToken)
 	if err != nil {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue."
