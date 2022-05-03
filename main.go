@@ -108,7 +108,7 @@ Notifier: %s
 			if err != nil {
 				log.Fatalf("cannot create migration driver instance: %s", err)
 			}
-			m, err := migrate.NewWithDatabaseInstance("file:///migrations", "postgres", driver)
+			m, err := migrate.NewWithDatabaseInstance("file:///build/migrations", "postgres", driver)
 			if err != nil {
 				log.Fatalf("cannot create migrator: %s", err)
 			}
