@@ -12,10 +12,7 @@ import (
 	"github.com/slack-go/slack"
 )
 
-type Slack struct {
-	Webhook string
-	Channel string
-}
+type Slack struct{}
 
 func (s Slack) Send(p notifications.Payload) error {
 	webhookUrl := os.Getenv("SLACK_WEBHOOK_URL")
