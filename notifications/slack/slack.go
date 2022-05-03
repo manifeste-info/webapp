@@ -19,9 +19,8 @@ type Slack struct {
 
 func (s Slack) Send(p notifications.Payload) error {
 	webhookUrl := os.Getenv("SLACK_WEBHOOK_URL")
-	channel := os.Getenv("SLACK_CHANNEL")
-	if webhookUrl == "" || channel == "" {
-		return fmt.Errorf("cannot create slack notifier: slack webhook URL or slack channel cannot be empty")
+	if webhookUrl == "" {
+		return fmt.Errorf("cannot create slack notifier: slack webhook URL cannot be empty")
 	}
 
 	attachment := slack.Attachment{
