@@ -2,8 +2,6 @@ package config
 
 import (
 	"os"
-
-	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -26,13 +24,12 @@ const MailSenderName = "Ne pas répondre"
 const MailValidationSubject = "Confirmation de l'adresse mail"
 
 // New returns a new Config
-func New() (Config, error) {
-	if err := godotenv.Load(); err != nil {
-		return Config{}, err
-	}
+func New() Config {
 	var c Config
-
 	c.Notifier = os.Getenv("MANIFESTE_NOTIFIER")
 	c.Env = os.Getenv("GIN_MODE")
-	return c, nil
+	if c.Env == "" {
+		c.Env = "development"
+	}
+	return c
 }

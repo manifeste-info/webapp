@@ -15,6 +15,7 @@ services:
       dockerfile: Dockerfile
     env_file:
       .env
+    command: "migrate:up"
     depends_on:
       - postgres
     networks:
