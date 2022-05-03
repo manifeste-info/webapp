@@ -184,7 +184,7 @@ func (a App) homePage(c *gin.Context) {
 	}
 	p := page{}
 
-	if a.Environment == "production" {
+	if a.Environment != "release" {
 		p.HasMessage = true
 		p.MessageTitle = "🚧 Attention."
 		p.Message = "Manifeste.info est actuellement en phase de développement, aucune donnée ne sera persistée."
