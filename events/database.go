@@ -10,19 +10,22 @@ import (
 	"github.com/manifeste-info/webapp/config"
 	"github.com/manifeste-info/webapp/database"
 	"github.com/manifeste-info/webapp/utils"
+	log "github.com/sirupsen/logrus"
 )
 
 // Create creates a new event in the database. It also do some formatting
 // operations on some values such as the date and time to convert them to a
 // common and parsable format
-func Create(city, addr, date, tiime, desc, org, link, id string) error { // todo: we should pass a struct here
+func Create(city, addr, date, tiime, desc, org, link, uid string) error { // todo: we should pass a struct here
 	dt, err := time.Parse(config.DateTimeFormat, fmt.Sprintf("%s %s", date, tiime))
 	if err != nil {
 		return err
 	}
+	id := utils.CreateULID()
+	log.Infof("created ULID '%s' for event '%s' in database before database insert", id, desc)
 
 	_, err = database.DB.Query(`INSERT INTO events (id,city,address,date,description,organizer,link,created_by) VALUES (1000000000000*random(),$1,$2,$3,$4,$5,$6,$7);`,
-		formatCity(city), addr, dt, desc, org, link, id)
+		formatCity(city), addr, dt, desc, org, link, uid)
 	return err
 }
 

@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS users(
-  id BIGSERIAL PRIMARY KEY,
+  id CHAR(26) PRIMARY KEY,
   email TEXT NOT NULL,
   first_name TEXT NOT NULL,
   last_name TEXT NOT NULL,

@@ -1,6 +1,12 @@
 package utils
 
-import "strings"
+import (
+	mathrand "math/rand"
+	"strings"
+	"time"
+
+	"github.com/oklog/ulid"
+)
 
 // CreateMapLinkFromAddr creates a link to Google Maps, built with the address
 // and the city provided
@@ -18,4 +24,12 @@ func StringInSlice(s string, sl []string) bool {
 		}
 	}
 	return false
+}
+
+// CreateULID returns a ULID string for database IDs
+func CreateULID() string {
+	seed := time.Now().UnixNano()
+	source := mathrand.NewSource(seed)
+	entropy := mathrand.New(source)
+	return ulid.MustNew(ulid.Timestamp(time.Now()), entropy).String()
 }

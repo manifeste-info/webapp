@@ -2,11 +2,12 @@ package users
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/manifeste-info/webapp/auth"
 	"github.com/manifeste-info/webapp/database"
+	"github.com/manifeste-info/webapp/utils"
+	log "github.com/sirupsen/logrus"
 )
 
 // CreateAccount creates a new account in the database
@@ -15,14 +16,16 @@ func CreateAccount(firstname, lastname, email, password string) error {
 	if err != nil {
 		return err
 	}
-	log.Println("hashed password, adding user to database")
+	log.Infof("hashed '%s' password, adding user to database", email)
 	return add(firstname, lastname, email, hash)
 }
 
 // add adds a user in the database
 func add(firstname, lastname, email, hash string) error {
-	_, err := database.DB.Query(`INSERT INTO users (id, email, first_name, last_name, password_hash, is_admin, has_confirmed_account) values (1000000000000*random(), $1, $2, $3, $4, false, false);`,
-		email, firstname, lastname, hash)
+	id := utils.CreateULID()
+	log.Infof("created ULID '%s' for user '%s' in database before database insert", id, email)
+	_, err := database.DB.Query(`INSERT INTO users (id, email, first_name, last_name, password_hash, is_admin, has_confirmed_account) values ($1, $2, $3, $4, $5, false, false);`,
+		id, email, firstname, lastname, hash)
 	return err
 }
 

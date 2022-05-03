@@ -1,18 +1,25 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/manifeste-info/webapp/app"
 	"github.com/manifeste-info/webapp/config"
 	"github.com/manifeste-info/webapp/database"
-	"github.com/manifeste-info/webapp/handlers"
 	"github.com/manifeste-info/webapp/mail"
+	"github.com/manifeste-info/webapp/utils"
 	"github.com/namsral/flag"
 	log "github.com/sirupsen/logrus"
 )
 
 func main() {
+	// before doing any action, we want to do the "CLI" behavior
+	if utils.StringInSlice("ulid", os.Args) {
+		fmt.Println(utils.CreateULID())
+		os.Exit(0)
+	}
+
 	var host, port, user, pass, name string
 	fs := flag.NewFlagSetWithEnvPrefix(os.Args[0], "MANIFESTE", 0)
 	fs.StringVar(&host, "db-host", "postgres", "Database host")
@@ -40,7 +47,7 @@ func main() {
 	if err := mail.CreateInstance(); err != nil {
 		log.Fatalf("fatal: cannot create mail instance: %s\n", err)
 	}
-	r, err := handlers.CreateRouter(a)
+	r, err := app.CreateRouter(a)
 	if err != nil {
 		log.Fatalf("fatal: cannot create router: %s\n", err)
 	}
