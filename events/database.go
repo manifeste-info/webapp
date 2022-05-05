@@ -25,7 +25,7 @@ func Create(city, addr, date, tiime, desc, org, link, uid string) (string, error
 	log.Infof("created ULID '%s' for event '%s' in database before database insert", id, desc)
 
 	_, err = database.DB.Query(`INSERT INTO events (id,city,address,date,description,organizer,link,created_by) VALUES ($1,$2,$3,$4,$5,$6,$7,$8);`,
-		utils.CreateULID(), formatCity(city), addr, dt, desc, org, link, uid)
+		id, formatCity(city), addr, dt, desc, org, link, uid)
 	return id, err
 }
 
