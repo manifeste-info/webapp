@@ -25,6 +25,7 @@ import (
 type App struct {
 	Notifier    notifications.Notifier
 	Environment string
+	JWTSecret   []byte
 }
 
 // New returns a newly configured App
@@ -42,6 +43,10 @@ func New(c config.Config) (App, error) {
 
 	a.Environment = c.Env
 
+	a.JWTSecret = []byte(os.Getenv("JWT_SECRET"))
+	if len(a.JWTSecret) == 0 {
+		return App{}, fmt.Errorf("JWT_SECRET cannot be empty")
+	}
 	return a, nil
 }
 
@@ -54,17 +59,17 @@ func CreateRouter(a App) (*gin.Engine, error) {
 	}
 
 	// if under development, use basic auth on all routes
-	if a.Environment != "release" {
-		user, pass := os.Getenv("BASIC_AUTH_USER"), os.Getenv("BASIC_AUTH_PASS")
-		if user == "" || pass == "" {
-			return nil, fmt.Errorf("basic auth is misconfigured: user or pass can't be empty")
-		}
-		r.Use(gin.BasicAuth(
-			gin.Accounts{
-				user: pass,
-			},
-		))
-	}
+	// if a.Environment != "release" {
+	// 	user, pass := os.Getenv("BASIC_AUTH_USER"), os.Getenv("BASIC_AUTH_PASS")
+	// 	if user == "" || pass == "" {
+	// 		return nil, fmt.Errorf("basic auth is misconfigured: user or pass can't be empty")
+	// 	}
+	// 	r.Use(gin.BasicAuth(
+	// 		gin.Accounts{
+	// 			user: pass,
+	// 		},
+	// 	))
+	// }
 
 	store := memory.NewStore()
 	rateLimiterMiddleware := mgin.NewMiddleware(limiter.New(store, rate))
@@ -80,33 +85,33 @@ func CreateRouter(a App) (*gin.Engine, error) {
 	r.GET("/mentions-legales", legalPage)
 	r.GET("/apropos", aboutPage)
 	r.GET("/recherche", searchPage)
-	r.GET("/connexion", connectionPage)
+	r.GET("/connexion", a.connectionPage)
 	r.GET("/nouveaucompte", registrationPage)
 	r.GET("/deconnexion", disconnectPage)
 	r.GET("/evenement/:id", eventPage)
 
-	r.POST("/connexion", connectionProcess)
-	r.POST("/nouveaucompte", registrationProcess)
+	r.POST("/connexion", a.connectionProcess)
+	r.POST("/nouveaucompte", a.registrationProcess)
 
 	authorized := r.Group("/moncompte")
-	authorized.Use(authRequired())
+	authorized.Use(authRequired(a))
 	{
 		// when a user connects successfully, the redirect is done using the intial
 		// requst method, which is POST. So this route need to handle GET and POST
-		authorized.GET("/", accountPage)
-		authorized.POST("/", accountPage)
+		authorized.GET("/", a.accountPage)
+		authorized.POST("/", a.accountPage)
 
-		authorized.GET("/nouveau", newPage)
-		authorized.GET("/maj/:eventID", updatePage)
-		authorized.GET("/supprimer/:eventID", deleteProcess)
-		authorized.GET("/confirmation/:token", confirmationProcess)
+		authorized.GET("/nouveau", a.newPage)
+		authorized.GET("/maj/:eventID", a.updatePage)
+		authorized.GET("/supprimer/:eventID", a.deleteProcess)
+		authorized.GET("/confirmation/:token", a.confirmationProcess)
 
 		authorized.POST("/nouveau", a.newProcess)
-		authorized.POST("/maj/:eventID", updateProcess)
+		authorized.POST("/maj/:eventID", a.updateProcess)
 	}
 
 	admin := r.Group("/admin")
-	admin.Use(adminRequired())
+	admin.Use(authRequired(a), adminRequired(a))
 	{
 		admin.GET("/dashboard", adminDashboardPage)
 
@@ -255,7 +260,7 @@ func searchPage(c *gin.Context) {
 
 	This handler returns the connection form
 */
-func connectionPage(c *gin.Context) {
+func (a App) connectionPage(c *gin.Context) {
 	type page struct {
 		// in case of error
 		Error  bool
@@ -271,10 +276,12 @@ func connectionPage(c *gin.Context) {
 	}
 	var p page
 
-	sessionToken, err := c.Cookie(config.SessionCookieName)
-	if err == nil && sessionToken != "" {
-		p.HasMsg = auth.IsAuthenticated(sessionToken)
-		p.Msg = "Tu es déjà connecté·e."
+	token, err := c.Cookie("token")
+	if err == nil && token != "" {
+		p.HasMsg, err = auth.VerifyJWT(token, a.JWTSecret)
+		if err == nil {
+			p.Msg = "Tu es déjà connecté·e."
+		}
 	}
 
 	c.HTML(http.StatusOK, "connection.html", p)
@@ -286,7 +293,7 @@ func connectionPage(c *gin.Context) {
 	This handler receives the credentials and try to authenticate the user. If it
 	succeed, it sets the session cookie
 */
-func connectionProcess(c *gin.Context) {
+func (a App) connectionProcess(c *gin.Context) {
 	type page struct {
 		// in case of error
 		Error  bool
@@ -305,15 +312,16 @@ func connectionProcess(c *gin.Context) {
 	email := c.PostForm("email")
 	password := c.PostForm("password")
 
-	sessionToken, err := auth.Authenticate(email, password)
+	jwt, err := auth.Authenticate(email, password, a.JWTSecret)
 	if err != nil {
 		p.Error = true
 		p.ErrMsg = "Mauvais email/mot de passe."
 		c.HTML(http.StatusInternalServerError, "connection.html", p)
+		log.Errorf("cannot authenticate user '%s': %s", email, err)
 		return
 	}
 
-	c.SetCookie(config.SessionCookieName, sessionToken, config.SessionCookieExpiry, "/", c.Request.URL.Hostname(), false, true)
+	c.SetCookie("token", jwt.Token, jwt.Expires.Hour()*3600, "/", c.Request.URL.Hostname(), false, true)
 	// p.Success = true
 	// c.HTML(http.StatusOK, "connection.html", p)
 	c.Redirect(http.StatusFound, "/moncompte")
@@ -334,7 +342,7 @@ func registrationPage(c *gin.Context) {
 	This handler process the registration request, and returns the regsiter page
 	if something is missing.
 */
-func registrationProcess(c *gin.Context) {
+func (a App) registrationProcess(c *gin.Context) {
 	type page struct {
 		// in case of error
 		Error     bool
@@ -406,16 +414,16 @@ func registrationProcess(c *gin.Context) {
 	}
 
 	// authenticate the user
-	sessionToken, err := auth.Authenticate(p.Email, pass)
+	jwt, err := auth.Authenticate(p.Email, pass, a.JWTSecret)
 	if err != nil {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue lors de la création du compte."
-		c.HTML(http.StatusUnauthorized, "register.html", p)
+		c.HTML(http.StatusInternalServerError, "register.html", p)
 		log.Errorf("cannot authenticate user: %s", err)
 		return
 	}
 
-	if err := mail.SendConfirmationToken(p.Email, sessionToken); err != nil {
+	if err := mail.SendConfirmationToken(p.Email, jwt.Token); err != nil {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue lors de l'envoi du mail de confirmation."
 		c.HTML(http.StatusInternalServerError, "register.html", p)
@@ -423,7 +431,7 @@ func registrationProcess(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie(config.SessionCookieName, sessionToken, config.SessionCookieExpiry, "/", c.Request.URL.Hostname(), false, true)
+	c.SetCookie("token", jwt.Token, jwt.Expires.Hour()*3600, "/", c.Request.URL.Hostname(), false, true)
 	p.Success = true
 	c.HTML(http.StatusOK, "register.html", p)
 	log.Printf("user %s created", p.Email)
@@ -435,7 +443,7 @@ func registrationProcess(c *gin.Context) {
 	This handler returns the user account page. It needs to be authentified to
 	access this page
 */
-func accountPage(c *gin.Context) {
+func (a App) accountPage(c *gin.Context) {
 	type page struct {
 		// in case of error
 		Error  bool
@@ -455,7 +463,7 @@ func accountPage(c *gin.Context) {
 	p := page{}
 
 	// retrieve the session token
-	sessionToken, err := c.Cookie(config.SessionCookieName)
+	token, err := c.Cookie("token")
 	if err != nil {
 		p.Error = true
 		p.ErrMsg = "Il semblerait que tu aies été déconnecté·e."
@@ -464,8 +472,8 @@ func accountPage(c *gin.Context) {
 		return
 	}
 
-	// get user infos based on the cookie
-	p.Name, _, _, err = users.GetUserInfos(sessionToken)
+	// get claims infos based on the jwt
+	cl, err := auth.GetJWTClaims(token, a.JWTSecret)
 	if err != nil {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue lors de la récupération de tes informations."
@@ -473,20 +481,10 @@ func accountPage(c *gin.Context) {
 		log.Errorf("cannot get user infos: %s", err)
 		return
 	}
-	p.Name = strings.Title(p.Name)
-
-	// get user id to list all its events
-	p.UserID, err = users.GetUserID(sessionToken)
-	if err != nil {
-		p.Error = true
-		p.ErrMsg = "Une erreur est survenue lors de la récupération de tes informations."
-		c.HTML(http.StatusUnauthorized, "account.html", p)
-		log.Errorf("cannot get user id: %s", err)
-		return
-	}
+	p.Name = strings.Title(cl.FirstName)
 
 	// check if the user is admin or not
-	p.IsAdmin, err = users.IsAdmin(p.UserID)
+	p.IsAdmin, err = users.IsAdmin(cl.UID)
 	if err != nil {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue lors de la récupération de tes informations."
@@ -496,7 +494,7 @@ func accountPage(c *gin.Context) {
 	}
 
 	// get events created by this user
-	p.Events, err = events.GetEventsByUserID(p.UserID)
+	p.Events, err = events.GetEventsByUserID(cl.UID)
 	if err != nil {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue lors de la récupération de tes évènements."
@@ -509,7 +507,7 @@ func accountPage(c *gin.Context) {
 		p.HasEvents = true
 	}
 
-	p.HasConfirmedAccount, err = users.HasConfirmedAccount(p.UserID)
+	p.HasConfirmedAccount, err = users.HasConfirmedAccount(cl.UID)
 	if err != nil {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue lors de la récupération de tes informations."
@@ -534,20 +532,15 @@ func disconnectPage(c *gin.Context) {
 	}
 	var p page
 
-	sessionToken, err := c.Cookie(config.SessionCookieName)
+	_, err := c.Cookie("token")
 	if err != nil {
-		p.Msg = "Une erreur est survenue."
+		p.Msg = "Tu n'es pas connecté·e."
 		c.HTML(http.StatusUnauthorized, "disconnect.html", p)
 		log.Errorf("cannot get user cookie: %s", err)
 		return
 	}
 
-	if ok := auth.Disconnect(sessionToken); !ok {
-		p.Msg = "Tu n'es pas connecté·e."
-		c.HTML(http.StatusUnauthorized, "disconnect.html", p)
-		log.Errorf("cannot delete user cookie")
-		return
-	}
+	c.SetCookie("token", "", 1, "/", c.Request.URL.Hostname(), false, true)
 	p.Success = true
 	c.HTML(http.StatusOK, "disconnect.html", p)
 }
@@ -557,7 +550,7 @@ func disconnectPage(c *gin.Context) {
 
 	This handler serves the form to create a new event.
 */
-func newPage(c *gin.Context) {
+func (a App) newPage(c *gin.Context) {
 	var err error
 	type page struct {
 		// in case of error
@@ -579,7 +572,7 @@ func newPage(c *gin.Context) {
 	}
 	var p page
 
-	sessionToken, err := c.Cookie(config.SessionCookieName)
+	token, err := c.Cookie("token")
 	if err != nil {
 		p.Error = true
 		p.ErrMsg = "Il semblerait que tu sois déconnecté·e."
@@ -588,7 +581,7 @@ func newPage(c *gin.Context) {
 		return
 	}
 
-	uid, err := users.GetUserID(sessionToken)
+	cl, err := auth.GetJWTClaims(token, a.JWTSecret)
 	if err != nil {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue."
@@ -597,12 +590,12 @@ func newPage(c *gin.Context) {
 		return
 	}
 
-	p.HasConfirmedAccount, err = users.HasConfirmedAccount(uid)
+	p.HasConfirmedAccount, err = users.HasConfirmedAccount(cl.UID)
 	if err != nil {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue."
 		c.HTML(http.StatusUnauthorized, "new.html", p)
-		log.Errorf("cannot check if user hsa confirmed its account: %s", err)
+		log.Errorf("cannot check if user has confirmed its account: %s", err)
 		return
 	}
 
@@ -652,7 +645,7 @@ func (a App) newProcess(c *gin.Context) {
 	}
 
 	// get the user ID
-	sessionToken, err := c.Cookie(config.SessionCookieName)
+	token, err := c.Cookie("token")
 	if err != nil {
 		p.Error = true
 		p.ErrMsg = "Il semblerait que tu sois déconnecté·e."
@@ -661,7 +654,7 @@ func (a App) newProcess(c *gin.Context) {
 		return
 	}
 
-	uid, err := users.GetUserID(sessionToken)
+	cl, err := auth.GetJWTClaims(token, a.JWTSecret)
 	if err != nil {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue."
@@ -670,7 +663,7 @@ func (a App) newProcess(c *gin.Context) {
 		return
 	}
 
-	p.HasConfirmedAccount, err = users.HasConfirmedAccount(uid)
+	p.HasConfirmedAccount, err = users.HasConfirmedAccount(cl.UID)
 	if err != nil {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue."
@@ -679,9 +672,11 @@ func (a App) newProcess(c *gin.Context) {
 		return
 	}
 
+	var eid string
 	if p.HasConfirmedAccount {
 		// create the event in the database
-		if err := events.Create(p.City, p.Address, p.Date, p.Time, p.Description, p.Organizer, p.Link, uid); err != nil {
+		eid, err = events.Create(p.City, p.Address, p.Date, p.Time, p.Description, p.Organizer, p.Link, cl.UID)
+		if err != nil {
 			p.Error = true
 			p.ErrMsg = "Une erreur est survenue, impossible de créer l'évènement."
 			c.HTML(http.StatusInternalServerError, "new.html", p)
@@ -692,8 +687,8 @@ func (a App) newProcess(c *gin.Context) {
 	}
 
 	payload := notifications.Payload{
-		EventID:   "to be implemented",
-		UserID:    uid,
+		EventID:   eid,
+		UserID:    cl.UID,
 		EventDesc: p.Description,
 	}
 	if err := a.Notifier.Send(payload); err != nil {
@@ -743,7 +738,7 @@ func eventPage(c *gin.Context) {
 	This handler show an update form, which is basically the same as the creation
 	form, but with pre-populated fields
 */
-func updatePage(c *gin.Context) {
+func (a App) updatePage(c *gin.Context) {
 	var err error
 	type page struct {
 		// in case of error
@@ -777,7 +772,7 @@ func updatePage(c *gin.Context) {
 	}
 
 	// get the user ID
-	sessionToken, err := c.Cookie(config.SessionCookieName)
+	token, err := c.Cookie("token")
 	if err != nil {
 		p.Error = true
 		p.ErrMsg = "Il semblerait que tu sois déconnecté·e."
@@ -786,7 +781,7 @@ func updatePage(c *gin.Context) {
 		return
 	}
 
-	uid, err := users.GetUserID(sessionToken)
+	cl, err := auth.GetJWTClaims(token, a.JWTSecret)
 	if err != nil {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue."
@@ -795,12 +790,12 @@ func updatePage(c *gin.Context) {
 		return
 	}
 
-	if p.Event.CreatedBy != uid {
+	if p.Event.CreatedBy != cl.UID {
 		p.Error = true
 		p.ErrMsg = "Il semblerait que tu n'aies pas créé cet évènement."
 		c.HTML(http.StatusUnauthorized, "update.html", p)
 		log.Errorf("user tries to update a event not created by him/her: uid: %s, eventID: %s, event created by: %s",
-			uid, p.Event.ID, p.Event.CreatedBy)
+			cl.UID, p.Event.ID, p.Event.CreatedBy)
 		return
 	}
 
@@ -822,7 +817,7 @@ func updatePage(c *gin.Context) {
 	This handler receives an event from the update form a updates the
 	corresponding event in the database
 */
-func updateProcess(c *gin.Context) {
+func (a App) updateProcess(c *gin.Context) {
 	type page struct {
 		// in case of error
 		Error  bool
@@ -878,7 +873,7 @@ func updateProcess(c *gin.Context) {
 	}
 
 	// get the user ID
-	sessionToken, err := c.Cookie(config.SessionCookieName)
+	token, err := c.Cookie("token")
 	if err != nil {
 		p.Error = true
 		p.ErrMsg = "Il semblerait que tu sois déconnecté·e."
@@ -887,7 +882,7 @@ func updateProcess(c *gin.Context) {
 		return
 	}
 
-	uid, err := users.GetUserID(sessionToken)
+	cl, err := auth.GetJWTClaims(token, a.JWTSecret)
 	if err != nil {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue."
@@ -905,7 +900,7 @@ func updateProcess(c *gin.Context) {
 		return
 	}
 
-	isAdmin, err := users.IsAdmin(uid)
+	isAdmin, err := users.IsAdmin(cl.UID)
 	if err != nil {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue."
@@ -914,12 +909,12 @@ func updateProcess(c *gin.Context) {
 		return
 	}
 
-	if createdBy != uid && !isAdmin {
+	if createdBy != cl.UID && !isAdmin {
 		p.Error = true
 		p.ErrMsg = "Il semblerait que tu n'aies pas créé cet évènement."
 		c.HTML(http.StatusUnauthorized, "update.html", p)
 		log.Errorf("user tries to update a event not created by him/her: uid: %s, eventID: %s, event created by: %s",
-			uid, p.ID, createdBy)
+			cl.UID, p.ID, createdBy)
 		return
 	}
 	// if we end up here, it means that the user doing the request is not the
@@ -942,7 +937,7 @@ func updateProcess(c *gin.Context) {
 
 	This handler receives an event ID and removes it from the DB
 */
-func deleteProcess(c *gin.Context) {
+func (a App) deleteProcess(c *gin.Context) {
 	type page struct {
 		Success bool
 	}
@@ -957,14 +952,14 @@ func deleteProcess(c *gin.Context) {
 	}
 
 	// get user ID
-	cookie, err := c.Cookie(config.SessionCookieName)
+	token, err := c.Cookie("token")
 	if err != nil {
 		c.HTML(http.StatusUnauthorized, "delete.html", p)
 		log.Errorf("cannot get user cookie: %s", err)
 		return
 	}
 
-	uid, err := users.GetUserID(cookie)
+	cl, err := auth.GetJWTClaims(token, a.JWTSecret)
 	if err != nil {
 		c.HTML(http.StatusInternalServerError, "delete.html", p)
 		log.Errorf("cannot get user id: %s", err)
@@ -972,7 +967,7 @@ func deleteProcess(c *gin.Context) {
 	}
 
 	// get the list of events created by this user
-	el, err := events.GetEventsByUserID(uid)
+	el, err := events.GetEventsByUserID(cl.UID)
 	if err != nil {
 		c.HTML(http.StatusInternalServerError, "delete.html", p)
 		log.Errorf("cannot get user events: %s", err)
@@ -1270,7 +1265,7 @@ func adminUserProcess(c *gin.Context) {
 
 	This handler checks if a confirmation token received by email is valid or not
 */
-func confirmationProcess(c *gin.Context) {
+func (a App) confirmationProcess(c *gin.Context) {
 	type page struct {
 		// in case of error
 		Error  bool
@@ -1289,15 +1284,15 @@ func confirmationProcess(c *gin.Context) {
 	}
 	p := page{}
 
-	token := c.Param("token")
-	if !mail.ValidateConfirmationToken(token) {
+	accountToken := c.Param("token")
+	if !mail.ValidateConfirmationToken(accountToken) {
 		p.Error = true
 		p.ErrMsg = "Le token est invalide."
 		c.HTML(http.StatusUnauthorized, "account.html", p)
 		return
 	}
 
-	sessionToken, err := c.Cookie(config.SessionCookieName)
+	token, err := c.Cookie("token")
 	if err != nil {
 		p.Error = true
 		p.ErrMsg = "Il semblerait que tu aies été déconnecté·e."
@@ -1305,7 +1300,7 @@ func confirmationProcess(c *gin.Context) {
 		return
 	}
 
-	uid, err := users.GetUserID(sessionToken)
+	cl, err := auth.GetJWTClaims(token, a.JWTSecret)
 	if err != nil {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue."
@@ -1313,21 +1308,13 @@ func confirmationProcess(c *gin.Context) {
 		log.Errorf("cannot retrieve user ID: %s", err)
 		return
 	}
+	p.Name = cl.FirstName
 
-	p.Name, _, _, err = users.GetUserInfos(sessionToken)
-	if err != nil {
+	if err := users.ValidateAccount(cl.UID); err != nil {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue."
 		c.HTML(http.StatusInternalServerError, "account.html", p)
-		log.Errorf("cannot get user account infos with ID '%s': %s", uid, err)
-		return
-	}
-
-	if err := users.ValidateAccount(uid); err != nil {
-		p.Error = true
-		p.ErrMsg = "Une erreur est survenue."
-		c.HTML(http.StatusInternalServerError, "account.html", p)
-		log.Errorf("cannot validate user account with ID '%s': %s", uid, err)
+		log.Errorf("cannot validate user account with ID '%s': %s", cl.UID, err)
 		return
 	}
 

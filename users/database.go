@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/manifeste-info/webapp/auth"
 	"github.com/manifeste-info/webapp/database"
 	"github.com/manifeste-info/webapp/utils"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // CreateAccount creates a new account in the database
 func CreateAccount(firstname, lastname, email, password string) error {
-	hash, err := auth.HashPassword(password)
+	hash, err := hashPassword(password)
 	if err != nil {
 		return err
 	}
@@ -56,16 +56,17 @@ func CheckIfExists(email string) (bool, error) {
 	return i != 0, nil
 }
 
-// GetUserInfos retrieve a firstname, a lastname, an email and an user ID based
+// GetUserInfosFromSessionToken retrieve a firstname, a lastname, an email and an user ID based
 // on a session token
-func GetUserInfos(sessionToken string) (string, string, string, error) {
+func GetUserInfosFromSessionToken(sessionToken string) (string, string, string, error) {
 	type user struct {
 		FirstName string `db:"first_name"`
 		LastName  string `db:"last_name"`
 	}
 	var u user
 	log.Infof("getting user informations for session token: '%s'", sessionToken)
-	email := auth.GetEmailFromSessionToken(sessionToken)
+	// email := auth.GetEmailFromSessionToken(sessionToken)
+	email := "broken"
 	log.Infof("retrieved email '%s' associated with token '%s'", email, sessionToken)
 
 	if email == "" {
@@ -90,7 +91,8 @@ func GetUserID(sessionToken string) (string, error) {
 	}
 	var u user
 
-	email := auth.GetEmailFromSessionToken(sessionToken)
+	// email := auth.GetEmailFromSessionToken(sessionToken)
+	email := "broken"
 
 	rows, err := database.DB.Query(`SELECT id FROM users WHERE email=$1;`, email)
 	if err != nil {
@@ -167,4 +169,25 @@ func HasConfirmedAccount(id string) (bool, error) {
 func ValidateAccount(id string) error {
 	_, err := database.DB.Query(`UPDATE users SET has_confirmed_account='true' WHERE id=$1;`, id)
 	return err
+}
+
+// GetUserInfosFromEmail returns the informations linked to a given email
+// address
+func GetUserInfosFromEmail(email string) (User, error) {
+	var u User
+	row := database.DB.QueryRow(`SELECT id,first_name,last_name,email,password_hash,is_admin,has_confirmed_account,created_at FROM users WHERE email=$1;`, email)
+	if err := row.Scan(&u.ID, &u.Firstname, &u.Lastname, &u.Email, &u.HashedPassword, &u.IsAdmin, &u.HasConfirmedAccount, &u.CreatedAt); err != nil {
+		return User{}, err
+	}
+	return u, nil
+}
+
+// hashPassword hashes a password using bcrypt with max cost and returns the
+// hash
+func hashPassword(pass string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(pass), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hash), nil
 }
