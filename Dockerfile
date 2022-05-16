@@ -23,4 +23,4 @@ RUN go build \
     # && strip manifeste \
     # && /usr/local/bin/upx -9 manifeste
 
-ENTRYPOINT [ "/build/manifeste" ]
+ENTRYPOINT [ "/build/manifeste", "migrate:up" ]
