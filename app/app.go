@@ -690,9 +690,10 @@ func (a App) newProcess(c *gin.Context) {
 		EventID:   eid,
 		UserID:    cl.UID,
 		EventDesc: p.Description,
+		Kind:      notifications.KindCreate,
 	}
 	if err := a.Notifier.Send(payload); err != nil {
-		log.Errorf("cannot send payload via notifier: %s", err)
+		log.Errorf("cannot send create payload via notifier: %s", err)
 	}
 	c.HTML(http.StatusOK, "new.html", p)
 }
@@ -926,6 +927,16 @@ func (a App) updateProcess(c *gin.Context) {
 		c.HTML(http.StatusBadRequest, "update.html", p)
 		log.Errorf("cannot get event informations from update form: %s", err)
 		return
+	}
+
+	payload := notifications.Payload{
+		EventID:   p.ID,
+		UserID:    cl.UID,
+		EventDesc: p.Description,
+		Kind:      notifications.KindEdit,
+	}
+	if err := a.Notifier.Send(payload); err != nil {
+		log.Errorf("cannot send edit payload via notifier: %s", err)
 	}
 
 	p.Success = true

@@ -20,13 +20,22 @@ func (s Slack) Send(p notifications.Payload) error {
 		return fmt.Errorf("cannot create slack notifier: slack webhook URL cannot be empty")
 	}
 
+	var fb, txt string
+	switch p.Kind {
+	case notifications.KindCreate:
+		fb = "Un nouvel évènement a été créé"
+		txt = "<!here> Un nouvel event a été créé."
+	case notifications.KindEdit:
+		fb = "Un évènement a été édité"
+		txt = "<!here> Un event a été édité."
+	}
 	attachment := slack.Attachment{
 		Color:         "good",
-		Fallback:      "Un nouvel évènement a été créé",
+		Fallback:      fb,
 		AuthorName:    "Manifeste.Info",
 		AuthorSubname: "manifeste.info",
 		AuthorLink:    "https://manifeste.info",
-		Text:          "<!here> Un nouvel event a été créé.",
+		Text:          txt,
 		Ts:            json.Number(strconv.FormatInt(time.Now().Unix(), 10)),
 	}
 
