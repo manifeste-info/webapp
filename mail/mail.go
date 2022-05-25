@@ -6,16 +6,13 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/google/uuid"
 	"github.com/manifeste-info/webapp/config"
+	"github.com/manifeste-info/webapp/users"
 	"gopkg.in/gomail.v2"
 )
 
 var d *gomail.Dialer
 var e sesInfo
-
-// the key is the token and the value is the email
-var pendingValidtionTokens map[string]user
 
 type user struct {
 	email        string
@@ -46,23 +43,17 @@ func CreateInstance() error {
 		port:       port,
 	}
 	d = gomail.NewDialer(e.host, e.port, e.smtpUser, e.smtpPass)
-	pendingValidtionTokens = make(map[string]user)
 	return nil
 }
 
-// SendConfirmationToken creates a confirmation token, adds it to a pending
+// SendConfirmationToken takes a validation token, adds it to a pending
 // validation tokens map and sends a link to the user to activate its account
-func SendConfirmationToken(email, sessionToken string) error {
-	token := uuid.NewString()
-	u := user{
-		email:        email,
-		sessionToken: sessionToken,
-	}
-	log.Printf("user '%s' has been attributed validation token '%s'", email, token)
+func SendConfirmationToken(email, sessionToken, vt string) error {
+	log.Printf("user '%s' has been attributed validation token '%s'", email, vt)
 
 	to := []string{email}
 	m := gomail.NewMessage()
-	m.SetBody("text/html", buildConfirmationBody(token))
+	m.SetBody("text/html", buildConfirmationBody(vt))
 	m.SetHeaders(map[string][]string{
 		"From":    {m.FormatAddress(e.sender, e.senderName)},
 		"To":      to,
@@ -73,25 +64,24 @@ func SendConfirmationToken(email, sessionToken string) error {
 		return err
 	}
 
-	log.Printf("sent confirmation email to '%s', validation token is '%s'", email, token)
-
-	// add the token to the pendingValidationTokens map
-	pendingValidtionTokens[token] = u
+	log.Printf("sent confirmation email to '%s', validation token is '%s'", email, vt)
 	return nil
 }
 
 // ValidateConfirmationToken checks if a confirmation token is valid. if yes, it
 // returns true and delete the token from the pending validation map. It returns
 // false otherwise
-func ValidateConfirmationToken(token string) bool {
-	u, ok := pendingValidtionTokens[token]
-	if !ok {
-		return false
+func ValidateConfirmationToken(uid, token string) (bool, error) {
+	dbt, err := users.GetValidationToken(uid)
+	if err != nil {
+		return false, err
+	}
+	if dbt != token {
+		return false, nil
 	}
 
-	log.Printf("user '%s' confirmed its account with token '%s'", u.email, token)
-	delete(pendingValidtionTokens, token)
-	return true
+	log.Printf("user '%s' confirmed its account with token '%s'", uid, token)
+	return true, nil
 }
 
 func buildConfirmationBody(token string) string {

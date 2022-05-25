@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/manifeste-info/webapp/auth"
 	"github.com/manifeste-info/webapp/config"
 	"github.com/manifeste-info/webapp/events"
@@ -404,8 +405,12 @@ func (a App) registrationProcess(c *gin.Context) {
 		return
 	}
 
+	// create the account validation token
+	validToken := uuid.NewString()
+	log.Infof("created validation token '%s' for user email '%s'", validToken, p.Email)
+
 	// create user account
-	if err := users.CreateAccount(p.FirstName, p.LastName, p.Email, pass); err != nil {
+	if err := users.CreateAccount(p.FirstName, p.LastName, p.Email, pass, validToken); err != nil {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue lors de la création du compte."
 		c.HTML(http.StatusInternalServerError, "register.html", p)
@@ -423,7 +428,7 @@ func (a App) registrationProcess(c *gin.Context) {
 		return
 	}
 
-	if err := mail.SendConfirmationToken(p.Email, jwt.Token); err != nil {
+	if err := mail.SendConfirmationToken(p.Email, jwt.Token, validToken); err != nil {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue lors de l'envoi du mail de confirmation."
 		c.HTML(http.StatusInternalServerError, "register.html", p)
@@ -1295,14 +1300,6 @@ func (a App) confirmationProcess(c *gin.Context) {
 	}
 	p := page{}
 
-	accountToken := c.Param("token")
-	if !mail.ValidateConfirmationToken(accountToken) {
-		p.Error = true
-		p.ErrMsg = "Le token est invalide."
-		c.HTML(http.StatusUnauthorized, "account.html", p)
-		return
-	}
-
 	token, err := c.Cookie("token")
 	if err != nil {
 		p.Error = true
@@ -1320,6 +1317,22 @@ func (a App) confirmationProcess(c *gin.Context) {
 		return
 	}
 	p.Name = cl.FirstName
+
+	accountToken := c.Param("token")
+	isValid, err := mail.ValidateConfirmationToken(cl.UID, accountToken)
+	if err != nil {
+		p.Error = true
+		p.ErrMsg = "Une erreur est survenue."
+		c.HTML(http.StatusInternalServerError, "account.html", p)
+		return
+	}
+
+	if !isValid {
+		p.Error = true
+		p.ErrMsg = "Le token est invalide."
+		c.HTML(http.StatusUnauthorized, "account.html", p)
+		return
+	}
 
 	if err := users.ValidateAccount(cl.UID); err != nil {
 		p.Error = true

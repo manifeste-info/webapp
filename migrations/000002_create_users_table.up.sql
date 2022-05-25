@@ -6,5 +6,6 @@ CREATE TABLE IF NOT EXISTS users(
   password_hash TEXT NOT NULL,
   is_admin BOOLEAN NOT NULL,
   has_confirmed_account BOOLEAN NOT NULL,
+  account_validation_token TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

@@ -11,21 +11,21 @@ import (
 )
 
 // CreateAccount creates a new account in the database
-func CreateAccount(firstname, lastname, email, password string) error {
+func CreateAccount(firstname, lastname, email, password, vt string) error {
 	hash, err := hashPassword(password)
 	if err != nil {
 		return err
 	}
 	log.Infof("hashed '%s' password, adding user to database", email)
-	return add(firstname, lastname, email, hash)
+	return add(firstname, lastname, email, hash, vt)
 }
 
 // add adds a user in the database
-func add(firstname, lastname, email, hash string) error {
+func add(firstname, lastname, email, hash, vt string) error {
 	id := utils.CreateULID()
 	log.Infof("created ULID '%s' for user '%s' in database before database insert", id, email)
-	_, err := database.DB.Query(`INSERT INTO users (id, email, first_name, last_name, password_hash, is_admin, has_confirmed_account) values ($1, $2, $3, $4, $5, false, false);`,
-		id, email, firstname, lastname, hash)
+	_, err := database.DB.Query(`INSERT INTO users (id, email, first_name, last_name, password_hash, is_admin, has_confirmed_account, account_validation_token) values ($1, $2, $3, $4, $5, false, false, $6);`,
+		id, email, firstname, lastname, hash, vt)
 	return err
 }
 
@@ -190,4 +190,15 @@ func hashPassword(pass string) (string, error) {
 		return "", err
 	}
 	return string(hash), nil
+}
+
+// GetValidationToken returns an account validation token associated to
+// a UID in database
+func GetValidationToken(uid string) (string, error) {
+	var token string
+	row := database.DB.QueryRow(`SELECT account_validation_token FROM users WHERE id=$1;`, uid)
+	if err := row.Scan(&token); err != nil {
+		return token, err
+	}
+	return token, nil
 }
