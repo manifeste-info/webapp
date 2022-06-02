@@ -412,8 +412,10 @@ func (a App) registrationProcess(c *gin.Context) {
 	validToken := uuid.NewString()
 	log.Infof("created validation token '%s' for user email '%s'", validToken, p.Email)
 
+	id := utils.CreateULID()
+
 	// create user account
-	if err := users.CreateAccount(p.FirstName, p.LastName, p.Email, pass, validToken); err != nil {
+	if err := users.CreateAccount(p.FirstName, p.LastName, p.Email, pass, validToken, id); err != nil {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue lors de la création du compte."
 		c.HTML(http.StatusInternalServerError, "register.html", p)
@@ -437,6 +439,18 @@ func (a App) registrationProcess(c *gin.Context) {
 		c.HTML(http.StatusInternalServerError, "register.html", p)
 		log.Errorf("cannot send confirmation token: %s", err)
 		return
+	}
+
+	payload := notifications.PayloadNewAccount{
+		UserID:                 id,
+		Email:                  p.Email,
+		Firstname:              p.FirstName,
+		Lastname:               p.LastName,
+		AccountValidationToken: validToken,
+	}
+
+	if err := a.Notifier.SendNewAccount(payload); err != nil {
+		log.Errorf("cannot send new account notification: %s", err)
 	}
 
 	c.SetCookie("token", jwt.Token, jwt.Expires.Hour()*3600, "/", c.Request.URL.Hostname(), false, true)
@@ -699,13 +713,13 @@ func (a App) newProcess(c *gin.Context) {
 		p.Success = true
 	}
 
-	payload := notifications.Payload{
+	payload := notifications.PayloadNewEvent{
 		EventID:   eid,
 		UserID:    cl.UID,
 		EventDesc: p.Description,
 		Kind:      notifications.KindCreate,
 	}
-	if err := a.Notifier.Send(payload); err != nil {
+	if err := a.Notifier.SendNewEvent(payload); err != nil {
 		log.Errorf("cannot send create payload via notifier: %s", err)
 	}
 	c.HTML(http.StatusOK, "new.html", p)
@@ -946,13 +960,13 @@ func (a App) updateProcess(c *gin.Context) {
 		return
 	}
 
-	payload := notifications.Payload{
+	payload := notifications.PayloadNewEvent{
 		EventID:   p.ID,
 		UserID:    cl.UID,
 		EventDesc: p.Description,
 		Kind:      notifications.KindEdit,
 	}
-	if err := a.Notifier.Send(payload); err != nil {
+	if err := a.Notifier.SendNewEvent(payload); err != nil {
 		log.Errorf("cannot send edit payload via notifier: %s", err)
 	}
 
