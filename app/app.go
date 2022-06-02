@@ -776,8 +776,6 @@ func (a App) updatePage(c *gin.Context) {
 		// in case of success
 		Success bool
 
-		Cities []string
-
 		Exists bool
 		Event  events.Event
 	}
@@ -837,8 +835,6 @@ func (a App) updatePage(c *gin.Context) {
 	// rebuild the time
 	timeParts := strings.Split(parts[1], ":")
 	p.Event.Time = fmt.Sprintf("%s:%s", timeParts[0], timeParts[1])
-
-	p.Cities = utils.AllCities
 
 	c.HTML(http.StatusOK, "update.html", p)
 }

@@ -54,12 +54,7 @@ $(document).ready(function(){
       <div class="row">
         <div class="col-md-6 mb-3">
           <label for="city">Ville<sup style="color:firebrick;">*</sup></label>
-          <!-- <input type="text" class="form-control" name="city" id="city" placeholder="Paris" value="{{.Event.City}}"> -->
-          <input class="form-control" list="datalistOptions" id="city" name="city" placeholder="Nom de la ville...">
-          <datalist id="datalistOptions">
-            {{range .Cities}}
-              <option value="{{.}}">
-            {{end}}
+          <input type="text" class="form-control" name="city" id="city" placeholder="Paris" value="{{.Event.City}}">
           </datalist>
         </div>
         <div class="col-md-6 mb-3">
@@ -124,7 +119,7 @@ $(document).ready(function(){
         </div>
         <div class="col-md-6 mb-3">
           <label for="link">Lien de l'évènement</label>
-          <input type="text" class="form-control" name="link" id="link" placeholder="https://..." value="">
+          <input type="text" class="form-control" name="link" id="link" placeholder="https://..." value="{{.Event.Link}}">
         </div>
       </div>
       
