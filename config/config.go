@@ -5,8 +5,9 @@ import (
 )
 
 type Config struct {
-	Notifier string
-	Env      string
+	Notifier        string
+	Env             string
+	ReportThreshold string
 }
 
 const DateTimeFormat = "02/01/2006 15:04"
@@ -31,5 +32,6 @@ func New() Config {
 	if c.Env == "" {
 		c.Env = "development"
 	}
+	c.ReportThreshold = os.Getenv("REPORTS_THRESHOLD")
 	return c
 }

@@ -1,6 +1,5 @@
 {{template "_head.html"}}
 
-
 {{if .Success}}
   <div class="container mt-5">
     <h1>Résultats pour la ville de {{.City}}</h1>
@@ -16,7 +15,7 @@
           <li>👥 Organisateur·rice: {{.Organizer}}</li>
           <li>🔗 En savoir plus: <a href="{{.Link}}">{{.Link}}</a></li>
         </ul>
-        <a href="/evenement/{{.ID}}"><i>Partager cet évènement.</i></a>
+        <a href="/evenement/{{.ID}}"><i>Partager cet évènement.</i></a> - <a href="/signaler/{{.ID}}"><i style="color:crimson">Signaler.</i></a>
         <hr>
       </div>
     {{end}}

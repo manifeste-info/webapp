@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -17,6 +18,8 @@ import (
 	"github.com/manifeste-info/webapp/notifications/slack"
 	"github.com/manifeste-info/webapp/users"
 	"github.com/manifeste-info/webapp/utils"
+	"github.com/oklog/ulid"
+	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	limiter "github.com/ulule/limiter/v3"
 	mgin "github.com/ulule/limiter/v3/drivers/middleware/gin"
@@ -25,9 +28,10 @@ import (
 
 // App is the core structure that is shared between all handlers
 type App struct {
-	Notifier    notifications.Notifier
-	Environment string
-	JWTSecret   []byte
+	Notifier         notifications.Notifier
+	Environment      string
+	JWTSecret        []byte
+	ReportsThreshold int
 }
 
 // New returns a newly configured App
@@ -48,6 +52,12 @@ func New(c config.Config) (App, error) {
 	a.JWTSecret = []byte(os.Getenv("JWT_SECRET"))
 	if len(a.JWTSecret) == 0 {
 		return App{}, fmt.Errorf("JWT_SECRET cannot be empty")
+	}
+
+	var err error
+	a.ReportsThreshold, err = strconv.Atoi(c.ReportThreshold)
+	if err != nil {
+		return App{}, nil
 	}
 	return a, nil
 }
@@ -91,6 +101,7 @@ func CreateRouter(a App) (*gin.Engine, error) {
 	r.GET("/nouveaucompte", registrationPage)
 	r.GET("/deconnexion", disconnectPage)
 	r.GET("/evenement/:id", eventPage)
+	r.GET("/signaler/:id", a.reportEventPage)
 
 	r.POST("/connexion", a.connectionProcess)
 	r.POST("/nouveaucompte", a.registrationProcess)
@@ -757,6 +768,7 @@ func eventPage(c *gin.Context) {
 		return
 	}
 	p.Event = e
+
 	c.HTML(http.StatusOK, "event.html", p)
 }
 
@@ -1422,4 +1434,48 @@ func adminAllEventsPage(c *gin.Context) {
 			"created_by":  e.CreatedBy,
 		})
 	}
+}
+
+/*
+	Report event page
+*/
+func (a App) reportEventPage(c *gin.Context) {
+	type page struct {
+		Message string
+	}
+	p := page{
+		Message: "Merci pour le signalement, nous l'étudierons dans les plus brefs délais!",
+	}
+
+	id := c.Param("id")
+
+	_, err := ulid.Parse(id)
+	if err != nil {
+		p.Message = "Erreur, l'ID de l'évènement est invalide."
+		c.HTML(http.StatusBadRequest, "report.html", p)
+		return
+	}
+
+	// get the number of reports of this event
+	num, err := events.GetEventReports(id)
+	if err != nil {
+		log.Error("cannot get event id '%s' reports: %s", id, err)
+		p.Message = "Une erreur est survenue."
+		c.HTML(http.StatusInternalServerError, "report.html", p)
+		return
+	}
+
+	log.Infof("event with id '%s' has %d reports", id, num)
+	if num >= a.ReportsThreshold {
+		payload := notifications.PayloadNewReport{
+			EventID: id,
+		}
+
+		a.Notifier.SendNewReport(payload)
+	}
+	if err := events.UpdateEventReports(id, num+1); err != nil {
+		logrus.Errorf("cannot update event reports for event '%s': %s", id, err)
+	}
+
+	c.HTML(http.StatusOK, "report.html", p)
 }
