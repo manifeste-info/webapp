@@ -116,6 +116,8 @@ func CreateRouter(a App) (*gin.Engine, error) {
 	admin.Use(authRequired(a), adminRequired(a))
 	{
 		admin.GET("/dashboard", adminDashboardPage)
+		admin.GET("/utilisateurs", adminAllUsersPage)
+		admin.GET("/evenements", adminAllEventsPage)
 
 		admin.POST("/evenement", adminEventProcess)
 		admin.POST("/utilisateur", adminUserProcess)
@@ -410,8 +412,10 @@ func (a App) registrationProcess(c *gin.Context) {
 	validToken := uuid.NewString()
 	log.Infof("created validation token '%s' for user email '%s'", validToken, p.Email)
 
+	id := utils.CreateULID()
+
 	// create user account
-	if err := users.CreateAccount(p.FirstName, p.LastName, p.Email, pass, validToken); err != nil {
+	if err := users.CreateAccount(p.FirstName, p.LastName, p.Email, pass, validToken, id); err != nil {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue lors de la création du compte."
 		c.HTML(http.StatusInternalServerError, "register.html", p)
@@ -435,6 +439,18 @@ func (a App) registrationProcess(c *gin.Context) {
 		c.HTML(http.StatusInternalServerError, "register.html", p)
 		log.Errorf("cannot send confirmation token: %s", err)
 		return
+	}
+
+	payload := notifications.PayloadNewAccount{
+		UserID:                 id,
+		Email:                  p.Email,
+		Firstname:              p.FirstName,
+		Lastname:               p.LastName,
+		AccountValidationToken: validToken,
+	}
+
+	if err := a.Notifier.SendNewAccount(payload); err != nil {
+		log.Errorf("cannot send new account notification: %s", err)
 	}
 
 	c.SetCookie("token", jwt.Token, jwt.Expires.Hour()*3600, "/", c.Request.URL.Hostname(), false, true)
@@ -697,13 +713,13 @@ func (a App) newProcess(c *gin.Context) {
 		p.Success = true
 	}
 
-	payload := notifications.Payload{
+	payload := notifications.PayloadNewEvent{
 		EventID:   eid,
 		UserID:    cl.UID,
 		EventDesc: p.Description,
 		Kind:      notifications.KindCreate,
 	}
-	if err := a.Notifier.Send(payload); err != nil {
+	if err := a.Notifier.SendNewEvent(payload); err != nil {
 		log.Errorf("cannot send create payload via notifier: %s", err)
 	}
 	c.HTML(http.StatusOK, "new.html", p)
@@ -759,8 +775,6 @@ func (a App) updatePage(c *gin.Context) {
 
 		// in case of success
 		Success bool
-
-		Cities []string
 
 		Exists bool
 		Event  events.Event
@@ -821,8 +835,6 @@ func (a App) updatePage(c *gin.Context) {
 	// rebuild the time
 	timeParts := strings.Split(parts[1], ":")
 	p.Event.Time = fmt.Sprintf("%s:%s", timeParts[0], timeParts[1])
-
-	p.Cities = utils.AllCities
 
 	c.HTML(http.StatusOK, "update.html", p)
 }
@@ -944,13 +956,13 @@ func (a App) updateProcess(c *gin.Context) {
 		return
 	}
 
-	payload := notifications.Payload{
+	payload := notifications.PayloadNewEvent{
 		EventID:   p.ID,
 		UserID:    cl.UID,
 		EventDesc: p.Description,
 		Kind:      notifications.KindEdit,
 	}
-	if err := a.Notifier.Send(payload); err != nil {
+	if err := a.Notifier.SendNewEvent(payload); err != nil {
 		log.Errorf("cannot send edit payload via notifier: %s", err)
 	}
 
@@ -1356,4 +1368,58 @@ func (a App) confirmationProcess(c *gin.Context) {
 	p.HasMsg = true
 	p.Msg = "Ton adresse email a été validée ! Tu peux dorénavant publier des évènements."
 	c.HTML(http.StatusOK, "account.html", p)
+}
+
+/*
+	All users page
+
+	This page displays in a JSON format the list of all the users registered on
+	the platform
+*/
+func adminAllUsersPage(c *gin.Context) {
+	us, err := users.GetAllUsers()
+	if err != nil {
+		c.String(http.StatusInternalServerError, "an error occured: "+err.Error())
+		return
+	}
+
+	for _, u := range us {
+		c.IndentedJSON(http.StatusOK, gin.H{
+			"user_id":                  u.ID,
+			"first_name":               u.Firstname,
+			"last_name":                u.Lastname,
+			"email":                    u.Email,
+			"account_validation_token": u.AccountValidationToken,
+			"has_confirmed_account":    u.HasConfirmedAccount,
+			"is_admin":                 u.IsAdmin,
+			"created_at":               u.CreatedAt,
+		})
+	}
+}
+
+/*
+	All events page
+
+	This page displays in a JSON format the list of all the events created on
+	the platform
+*/
+func adminAllEventsPage(c *gin.Context) {
+	es, err := events.GetAllEvents()
+	if err != nil {
+		c.String(http.StatusInternalServerError, "an error occured: "+err.Error())
+		return
+	}
+
+	for _, e := range es {
+		c.IndentedJSON(http.StatusOK, gin.H{
+			"event_id":    e.ID,
+			"city":        e.City,
+			"address":     e.Address,
+			"date":        e.Date,
+			"description": e.Description,
+			"organizer":   e.Organizer,
+			"link":        e.Link,
+			"created_by":  e.CreatedBy,
+		})
+	}
 }

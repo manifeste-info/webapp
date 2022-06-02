@@ -5,24 +5,22 @@ import (
 	"strings"
 
 	"github.com/manifeste-info/webapp/database"
-	"github.com/manifeste-info/webapp/utils"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 )
 
 // CreateAccount creates a new account in the database
-func CreateAccount(firstname, lastname, email, password, vt string) error {
+func CreateAccount(firstname, lastname, email, password, vt, id string) error {
 	hash, err := hashPassword(password)
 	if err != nil {
 		return err
 	}
 	log.Infof("hashed '%s' password, adding user to database", email)
-	return add(firstname, lastname, email, hash, vt)
+	return add(firstname, lastname, email, hash, vt, id)
 }
 
 // add adds a user in the database
-func add(firstname, lastname, email, hash, vt string) error {
-	id := utils.CreateULID()
+func add(firstname, lastname, email, hash, vt, id string) error {
 	log.Infof("created ULID '%s' for user '%s' in database before database insert", id, email)
 	_, err := database.DB.Query(`INSERT INTO users (id, email, first_name, last_name, password_hash, is_admin, has_confirmed_account, account_validation_token) values ($1, $2, $3, $4, $5, false, false, $6);`,
 		id, email, firstname, lastname, hash, vt)
@@ -201,4 +199,22 @@ func GetValidationToken(uid string) (string, error) {
 		return token, err
 	}
 	return token, nil
+}
+
+// GetAllUsers returns all users present in database
+func GetAllUsers() ([]User, error) {
+	rows, err := database.DB.Query(`SELECT id,email,first_name,last_name,is_admin,has_confirmed_account,created_at,account_validation_token FROM users;`)
+	if err != nil {
+		return nil, err
+	}
+	var us []User
+
+	for rows.Next() {
+		var u User
+		if err := rows.Scan(&u.ID, &u.Email, &u.Firstname, &u.Lastname, &u.IsAdmin, &u.HasConfirmedAccount, &u.CreatedAt, &u.AccountValidationToken); err != nil {
+			return nil, err
+		}
+		us = append(us, u)
+	}
+	return us, nil
 }

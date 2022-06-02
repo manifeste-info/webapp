@@ -19,8 +19,8 @@ COPY . .
 RUN go build \
         -ldflags="-X 'main.Version=${VERSION}' -X 'main.BuildDate=${BUILD_DATE}'" \
         -o manifeste \
-        . \
-    && strip manifeste \
-    && /usr/local/bin/upx -9 manifeste
+        .
+    # && strip manifeste \
+    # && /usr/local/bin/upx -9 manifeste
 
 ENTRYPOINT [ "/build/manifeste"]

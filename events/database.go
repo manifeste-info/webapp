@@ -329,3 +329,20 @@ func translateDaysMonthsToFrench(date string) string {
 
 	return translated
 }
+
+func GetAllEvents() ([]Event, error) {
+	rows, err := database.DB.Query(`SELECT id,city,address,date,description,organizer,link,created_by FROM events;`)
+	if err != nil {
+		return nil, err
+	}
+	var es []Event
+
+	for rows.Next() {
+		var e Event
+		if err := rows.Scan(&e.ID, &e.City, &e.Address, &e.Date, &e.Description, &e.Organizer, &e.Link, &e.CreatedBy); err != nil {
+			return nil, err
+		}
+		es = append(es, e)
+	}
+	return es, nil
+}

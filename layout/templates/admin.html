@@ -48,12 +48,14 @@
 
   <div class="container mt-5">
     <h2>Données</h2>
+    <a href="/admin/evenements">
     <button type="button" class="btn btn-secondary btn-sm">
       Nombre total d'events <span class="badge badge-light">{{.NumOfEvents}}</span>
-    </button>
+    </button></a>
+    <a href="/admin/utilisateurs">
     <button type="button" class="btn btn-secondary btn-sm">
       Nombre total d'users <span class="badge badge-light">{{.NumOfUsers}}</span>
-    </button>
+    </button></a>
     <button type="button" class="btn btn-warning btn-sm">
       Nombre d'users bannis <span class="badge badge-light">{{.NumOfBannedUsers}}</span>
     </button>

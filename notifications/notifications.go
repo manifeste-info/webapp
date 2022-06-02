@@ -6,11 +6,18 @@ const (
 )
 
 type Notifier interface {
-	Send(Payload) error
+	SendNewEvent(PayloadNewEvent) error
+	SendNewAccount(PayloadNewAccount) error
 }
 
-type Payload struct {
+type PayloadNewEvent struct {
 	EventID, UserID string
 	EventDesc       string
 	Kind            string
+}
+
+type PayloadNewAccount struct {
+	Email, UserID          string
+	Firstname, Lastname    string
+	AccountValidationToken string
 }
