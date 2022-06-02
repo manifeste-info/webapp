@@ -1,4 +1,4 @@
-FROM devopsworks/golang-upx:1.17 AS builder
+FROM devopsworks/golang-upx:1.18 AS builder
 
 ENV GO111MODULE=on \
     CGO_ENABLED=0 \
@@ -19,8 +19,8 @@ COPY . .
 RUN go build \
         -ldflags="-X 'main.Version=${VERSION}' -X 'main.BuildDate=${BUILD_DATE}'" \
         -o manifeste \
-        .
-    # && strip manifeste \
-    # && /usr/local/bin/upx -9 manifeste
+        . \
+    && strip manifeste \
+    && /usr/local/bin/upx -9 manifeste
 
 ENTRYPOINT [ "/build/manifeste"]
