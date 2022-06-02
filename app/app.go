@@ -117,6 +117,7 @@ func CreateRouter(a App) (*gin.Engine, error) {
 	{
 		admin.GET("/dashboard", adminDashboardPage)
 		admin.GET("/utilisateurs", adminAllUsersPage)
+		admin.GET("/evenements", adminAllEventsPage)
 
 		admin.POST("/evenement", adminEventProcess)
 		admin.POST("/utilisateur", adminUserProcess)
@@ -1359,6 +1360,12 @@ func (a App) confirmationProcess(c *gin.Context) {
 	c.HTML(http.StatusOK, "account.html", p)
 }
 
+/*
+	All users page
+
+	This page displays in a JSON format the list of all the users registered on
+	the platform
+*/
 func adminAllUsersPage(c *gin.Context) {
 	us, err := users.GetAllUsers()
 	if err != nil {
@@ -1376,6 +1383,33 @@ func adminAllUsersPage(c *gin.Context) {
 			"has_confirmed_account":    u.HasConfirmedAccount,
 			"is_admin":                 u.IsAdmin,
 			"created_at":               u.CreatedAt,
+		})
+	}
+}
+
+/*
+	All events page
+
+	This page displays in a JSON format the list of all the events created on
+	the platform
+*/
+func adminAllEventsPage(c *gin.Context) {
+	es, err := events.GetAllEvents()
+	if err != nil {
+		c.String(http.StatusInternalServerError, "an error occured: "+err.Error())
+		return
+	}
+
+	for _, e := range es {
+		c.IndentedJSON(http.StatusOK, gin.H{
+			"event_id":    e.ID,
+			"city":        e.City,
+			"address":     e.Address,
+			"date":        e.Date,
+			"description": e.Description,
+			"organizer":   e.Organizer,
+			"link":        e.Link,
+			"created_by":  e.CreatedBy,
 		})
 	}
 }
