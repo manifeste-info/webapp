@@ -3,6 +3,7 @@ module github.com/manifeste-info/webapp
 go 1.18
 
 require (
+	github.com/agnivade/levenshtein v1.1.1
 	github.com/gin-gonic/gin v1.7.7
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/golang-migrate/migrate/v4 v4.15.2

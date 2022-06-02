@@ -16,6 +16,7 @@ import (
 	"github.com/manifeste-info/webapp/notifications/empty"
 	"github.com/manifeste-info/webapp/notifications/slack"
 	"github.com/manifeste-info/webapp/users"
+	"github.com/manifeste-info/webapp/utils"
 	log "github.com/sirupsen/logrus"
 	limiter "github.com/ulule/limiter/v3"
 	mgin "github.com/ulule/limiter/v3/drivers/middleware/gin"
@@ -148,7 +149,7 @@ func healthPage(c *gin.Context) {
 	This page returns the security.txt file
 */
 func securityTxtPage(c *gin.Context) {
-	page := `Contact: mailto:security@manifeste.info
+	page := `Contact: mailto:manifeste.info+security@eml.cc
 Expires: 2024-05-01T13:37:00.000Z
 Preferred-Languages: fr, en
 Canonical: https://manifeste.info/security.txt`
@@ -567,6 +568,8 @@ func (a App) newPage(c *gin.Context) {
 
 		HasConfirmedAccount bool
 
+		Cities []string
+
 		City        string `form:"city"`
 		Address     string `form:"address"`
 		Description string `form:"description"`
@@ -604,6 +607,7 @@ func (a App) newPage(c *gin.Context) {
 		return
 	}
 
+	p.Cities = utils.AllCities
 	c.HTML(http.StatusOK, "new.html", p)
 }
 
@@ -679,8 +683,10 @@ func (a App) newProcess(c *gin.Context) {
 
 	var eid string
 	if p.HasConfirmedAccount {
+		city := utils.GetClosestCityName(p.City)
+
 		// create the event in the database
-		eid, err = events.Create(p.City, p.Address, p.Date, p.Time, p.Description, p.Organizer, p.Link, cl.UID)
+		eid, err = events.Create(city, p.Address, p.Date, p.Time, p.Description, p.Organizer, p.Link, cl.UID)
 		if err != nil {
 			p.Error = true
 			p.ErrMsg = "Une erreur est survenue, impossible de créer l'évènement."
@@ -754,6 +760,8 @@ func (a App) updatePage(c *gin.Context) {
 		// in case of success
 		Success bool
 
+		Cities []string
+
 		Exists bool
 		Event  events.Event
 	}
@@ -813,6 +821,8 @@ func (a App) updatePage(c *gin.Context) {
 	// rebuild the time
 	timeParts := strings.Split(parts[1], ":")
 	p.Event.Time = fmt.Sprintf("%s:%s", timeParts[0], timeParts[1])
+
+	p.Cities = utils.AllCities
 
 	c.HTML(http.StatusOK, "update.html", p)
 }

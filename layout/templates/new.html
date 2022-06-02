@@ -56,7 +56,13 @@ $(document).ready(function(){
       <div class="row">
         <div class="col-md-6 mb-3">
           <label for="city">Ville<sup style="color:firebrick;">*</sup></label>
-          <input type="text" class="form-control" name="city" id="city" placeholder="Paris" value="{{.City}}">
+          <!-- <input type="text" class="form-control" name="city" id="city" placeholder="Paris" value="{{.City}}"> -->
+          <input class="form-control" list="datalistOptions" id="city" name="city" placeholder="Nom de la ville...">
+          <datalist id="datalistOptions">
+            {{range .Cities}}
+              <option value="{{.}}">
+            {{end}}
+          </datalist>
         </div>
         <div class="col-md-6 mb-3">
           <label for="address">Adresse<sup style="color:firebrick;">*</sup></label>
