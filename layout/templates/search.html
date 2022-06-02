@@ -1,0 +1,45 @@
+{{template "_head.html"}}
+
+
+{{if .Success}}
+  <div class="container mt-5">
+    <h1>Résultats pour la ville de {{.City}}</h1>
+  </div>
+  {{if .HasResults}}
+    {{range .Events}}
+      <div class="container mt-4">
+        <h2>{{.Description}}</h2>
+        <br>
+        <ul>
+          <li>🗓️ {{.Date}}</li>
+          <li>🗺️ Localisation: {{.Address}} ({{.City}}) <a target="_blank" href="{{.MapLink}}"> <i>Voir sur la carte</i></a></li>
+          <li>👥 Organisateur·rice: {{.Organizer}}</li>
+          <li>🔗 En savoir plus: <a href="{{.Link}}">{{.Link}}</a></li>
+        </ul>
+        <a href="/evenement/{{.ID}}"><i>Partager cet évènement.</i></a>
+        <hr>
+      </div>
+    {{end}}
+  {{else}}
+    <div class="container mt-4">
+      <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <h4>Aucun résultat trouvé !</h4>
+        <p>Aucun évènement correspondant n'a été trouvé ou créé.</p>
+        <hr>
+        <p class="mb-0"><a href="/">Retente une recherche avec une autre ville !</a></p>
+        <!-- <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button> -->
+      </div>
+    </div>
+  {{end}}
+{{else}}
+  <div class="container mt-5">
+    <div class="alert alert-warning" role="alert">
+      <h4 class="alert-heading">Erreur !</h4>
+      <p>{{.ErrMsg}}</p>
+      <hr>
+      <p class="mb-0"><a href="/">Retour à la recherche.</a></p>
+    </div>
+  </div>
+{{end}}

@@ -1,0 +1,19 @@
+{{template "_head.html"}}
+
+{{if .Success}}
+<div class="container mt-4">
+  <div class="alert alert-success" role="alert">
+    <h4 class="alert-heading">Succès !</h4>
+    <p>L'évènement à été supprimé avec succès.</p>
+    <hr>
+    <p class="mb-0"><a href="/">Retour à la page d'accueil.</a></p>
+    <p class="mb-0"><a href="/moncompte">Retour à mon compte.</a></p>
+  </div>
+</div>
+{{else}}
+<div class="container mt-4">
+  <div class="alert alert-danger" role="alert">
+    Une erreur s'est produite. Rééssaie plus tard !
+  </div>
+</div>
+{{end}}

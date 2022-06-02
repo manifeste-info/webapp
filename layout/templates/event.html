@@ -1,0 +1,20 @@
+{{template "_head.html"}}
+
+{{if .Error}}
+<div class="container mt-5">
+  <div class="alert alert-danger" role="alert">
+    {{.ErrMsg}}
+  </div>
+</div>
+{{else}}
+<div class="container mt-5">
+  <h2>{{.Event.Description}}</h2>
+  <br>
+  <ul>
+    <li>🗓️ {{.Event.Date}}</li>
+    <li>🗺️ Localisation: {{.Event.Address}} ({{.Event.City}}) <a target="_blank" href="{{.Event.MapLink}}"> <i>Voir sur la carte</i></a></li>
+    <li>👥 Organisateur·rice: {{.Event.Organizer}}</li>
+    <li>🔗 En savoir plus: <a href="{{.Event.Link}}">{{.Event.Link}}</a></li>
+  </ul>
+</div>
+{{end}}

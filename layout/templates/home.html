@@ -1,0 +1,28 @@
+{{template "_head.html"}}
+
+{{if .HasMessage}}
+<div class="container mt-4">
+  <div class="alert alert-warning" role="alert">
+    <h4 class="alert-heading">{{.MessageTitle}}</h4>
+    <p>{{.Message}}</p>
+  </div>
+</div>
+{{end}}
+<div class="container mt-5">
+  <h1>Manifeste !</h1>
+  <p class="lead">Trouve une manifestation pour une cause en laquelle tu crois, près de chez toi.</p>
+</div>
+
+<div class="container mt-5">
+  <form action="/recherche" method="GET">
+    <input class="form-control form-control-lg" list="datalistOptions" id="ville" name="ville" placeholder="Rechercher une ville...">
+    <datalist id="datalistOptions">
+      {{range .Cities}}
+        <option value="{{.}}">
+      {{end}}
+    </datalist>
+    <div>
+      <button type="submit" class="btn btn-primary mt-2">Allons-y !</button>
+    </div>
+  </form>
+</div>
