@@ -135,7 +135,7 @@ Notifier: %s
 func (o *options) Configure() error {
 	// try to load any .env file
 	if err := godotenv.Load(); err != nil {
-		return err
+		log.Warn("no .env file found")
 	}
 
 	if o.PostgresHost == "" {
