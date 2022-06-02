@@ -202,3 +202,21 @@ func GetValidationToken(uid string) (string, error) {
 	}
 	return token, nil
 }
+
+// GetAllUsers returns all users present in database
+func GetAllUsers() ([]User, error) {
+	rows, err := database.DB.Query(`SELECT id,email,first_name,last_name,is_admin,has_confirmed_account,created_at,account_validation_token FROM users;`)
+	if err != nil {
+		return nil, err
+	}
+	var us []User
+
+	for rows.Next() {
+		var u User
+		if err := rows.Scan(&u.ID, &u.Email, &u.Firstname, &u.Lastname, &u.IsAdmin, &u.HasConfirmedAccount, &u.CreatedAt, &u.AccountValidationToken); err != nil {
+			return nil, err
+		}
+		us = append(us, u)
+	}
+	return us, nil
+}

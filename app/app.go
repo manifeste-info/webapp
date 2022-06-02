@@ -116,6 +116,7 @@ func CreateRouter(a App) (*gin.Engine, error) {
 	admin.Use(authRequired(a), adminRequired(a))
 	{
 		admin.GET("/dashboard", adminDashboardPage)
+		admin.GET("/utilisateurs", adminAllUsersPage)
 
 		admin.POST("/evenement", adminEventProcess)
 		admin.POST("/utilisateur", adminUserProcess)
@@ -1356,4 +1357,25 @@ func (a App) confirmationProcess(c *gin.Context) {
 	p.HasMsg = true
 	p.Msg = "Ton adresse email a été validée ! Tu peux dorénavant publier des évènements."
 	c.HTML(http.StatusOK, "account.html", p)
+}
+
+func adminAllUsersPage(c *gin.Context) {
+	us, err := users.GetAllUsers()
+	if err != nil {
+		c.String(http.StatusInternalServerError, "an error occured: "+err.Error())
+		return
+	}
+
+	for _, u := range us {
+		c.IndentedJSON(http.StatusOK, gin.H{
+			"user_id":                  u.ID,
+			"first_name":               u.Firstname,
+			"last_name":                u.Lastname,
+			"email":                    u.Email,
+			"account_validation_token": u.AccountValidationToken,
+			"has_confirmed_account":    u.HasConfirmedAccount,
+			"is_admin":                 u.IsAdmin,
+			"created_at":               u.CreatedAt,
+		})
+	}
 }
