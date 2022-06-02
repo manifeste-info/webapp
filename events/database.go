@@ -24,7 +24,7 @@ func Create(city, addr, date, tiime, desc, org, link, uid string) (string, error
 	id := utils.CreateULID()
 	log.Infof("created ULID '%s' for event '%s' in database before database insert", id, desc)
 
-	_, err = database.DB.Query(`INSERT INTO events (id,city,address,date,description,organizer,link,created_by) VALUES ($1,$2,$3,$4,$5,$6,$7,$8);`,
+	_, err = database.DB.Query(`INSERT INTO events (id,city,address,date,description,organizer,link,created_by,num_of_reports) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,0);`,
 		id, formatCity(city), addr, dt, desc, org, link, uid)
 	return id, err
 }
@@ -330,6 +330,7 @@ func translateDaysMonthsToFrench(date string) string {
 	return translated
 }
 
+// GetAllEvents returns all events in database
 func GetAllEvents() ([]Event, error) {
 	rows, err := database.DB.Query(`SELECT id,city,address,date,description,organizer,link,created_by FROM events;`)
 	if err != nil {
@@ -345,4 +346,20 @@ func GetAllEvents() ([]Event, error) {
 		es = append(es, e)
 	}
 	return es, nil
+}
+
+// GetEventReports returns the number of reports for a single event
+func GetEventReports(id string) (int, error) {
+	row := database.DB.QueryRow(`SELECT num_of_reports FROM events WHERE id=$1;`, id)
+	var i int
+	if err := row.Scan(&i); err != nil {
+		return i, err
+	}
+	return i, nil
+}
+
+// UpdateEventReports updates the number of reports an event has
+func UpdateEventReports(id string, num int) error {
+	_, err := database.DB.Query(`UPDATE events SET num_of_reports=$1 WHERE id=$2;`, num, id)
+	return err
 }

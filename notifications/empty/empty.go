@@ -13,3 +13,8 @@ func (e Empty) SendNewEvent(p notifications.PayloadNewEvent) error {
 func (e Empty) SendNewAccount(p notifications.PayloadNewAccount) error {
 	return nil
 }
+
+// This method immediatly returns with nil
+func (e Empty) SendNewReport(p notifications.PayloadNewReport) error {
+	return nil
+}

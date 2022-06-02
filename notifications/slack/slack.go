@@ -86,3 +86,37 @@ func (s Slack) SendNewAccount(p notifications.PayloadNewAccount) error {
 	logrus.Infof("sending new account slack payload with userID: %s", p.UserID)
 	return slack.PostWebhook(webhookUrl, &msg)
 }
+
+func (s Slack) SendNewReport(p notifications.PayloadNewReport) error {
+	webhookUrl := os.Getenv("SLACK_WEBHOOK_URL")
+	if webhookUrl == "" {
+		return fmt.Errorf("cannot create slack notifier: slack webhook URL cannot be empty")
+	}
+
+	fb := "Un signalement a été fait"
+	txt := "<!here> Un signalement a été fait."
+
+	attachment := slack.Attachment{
+		Color:         "bad",
+		Fallback:      fb,
+		AuthorName:    "Manifeste.Info",
+		AuthorSubname: "manifeste.info",
+		AuthorLink:    "https://manifeste.info",
+		Text:          txt,
+		Ts:            json.Number(strconv.FormatInt(time.Now().Unix(), 10)),
+	}
+
+	attachment2 := slack.Attachment{
+		Color: "bad",
+		Text: fmt.Sprintf("EventID: `%s`\nLien: `https://manifeste.info/evenement/%s`\n",
+			p.EventID, p.EventID),
+		Ts: json.Number(strconv.FormatInt(time.Now().Unix(), 10)),
+	}
+
+	msg := slack.WebhookMessage{
+		Attachments: []slack.Attachment{attachment, attachment2},
+	}
+
+	logrus.Infof("sending new report slack payload with eventID: %s", p.EventID)
+	return slack.PostWebhook(webhookUrl, &msg)
+}
