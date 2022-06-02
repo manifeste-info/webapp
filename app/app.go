@@ -710,7 +710,10 @@ func (a App) newProcess(c *gin.Context) {
 
 	var eid string
 	if p.HasConfirmedAccount {
-		city := utils.GetClosestCityName(p.City)
+		city := p.City
+		if !utils.StringInSlice(p.City, utils.AllCities) {
+			city = utils.GetClosestCityName(p.City)
+		}
 
 		// create the event in the database
 		eid, err = events.Create(city, p.Address, p.Date, p.Time, p.Description, p.Organizer, p.Link, cl.UID)
