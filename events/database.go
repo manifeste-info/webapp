@@ -16,7 +16,7 @@ import (
 // Create creates a new event in the database. It also do some formatting
 // operations on some values such as the date and time to convert them to a
 // common and parsable format
-func Create(city, addr, date, tiime, desc, org, link, uid string) (string, error) { // todo: we should pass a struct here
+func Create(city, addr, date, tiime, desc, org, link, uid, cat string) (string, error) { // todo: we should pass a struct here
 	dt, err := time.Parse(config.DateTimeFormat, fmt.Sprintf("%s %s", date, tiime))
 	if err != nil {
 		return "", err
@@ -24,15 +24,15 @@ func Create(city, addr, date, tiime, desc, org, link, uid string) (string, error
 	id := utils.CreateULID()
 	log.Infof("created ULID '%s' for event '%s' in database before database insert", id, desc)
 
-	_, err = database.DB.Query(`INSERT INTO events (id,city,address,date,description,organizer,link,created_by,num_of_reports) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,0);`,
-		id, formatCity(city), addr, dt, desc, org, link, uid)
+	_, err = database.DB.Query(`INSERT INTO events (id,city,address,date,description,organizer,link,created_by,num_of_reports,category) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,0,$9);`,
+		id, formatCity(city), addr, dt, desc, org, link, uid, cat)
 	return id, err
 }
 
 // GetEventsByCityOrdered retuns a list of events for a given city. Those events
 // are ordered chronologically
 func GetEventsByCityOrdered(city string) ([]Event, error) {
-	rows, err := database.DB.Query(`SELECT id,city,date,address,description,organizer,link FROM events WHERE city=$1;`, city)
+	rows, err := database.DB.Query(`SELECT id,city,date,address,description,organizer,link,category FROM events WHERE city=$1;`, city)
 	if err != nil {
 		return []Event{}, err
 	}
@@ -40,7 +40,7 @@ func GetEventsByCityOrdered(city string) ([]Event, error) {
 	var events []Event
 	for rows.Next() {
 		var event Event
-		if err := rows.Scan(&event.ID, &event.City, &event.Date, &event.Address, &event.Description, &event.Organizer, &event.Link); err != nil {
+		if err := rows.Scan(&event.ID, &event.City, &event.Date, &event.Address, &event.Description, &event.Organizer, &event.Link, &event.Category); err != nil {
 			return events, err
 		}
 		dateTmp, err := time.Parse(time.RFC3339, event.Date)
@@ -123,7 +123,7 @@ func GetCitiesWithEvents() ([]string, error) {
 // its ID. We also need to specify if we want to translate the date in french
 // or not
 func GetEventByID(id string, translate bool) (Event, error) {
-	rows, err := database.DB.Query(`SELECT id,city,date,address,description,organizer,link,created_by FROM events WHERE id=$1`, id)
+	rows, err := database.DB.Query(`SELECT id,city,date,address,description,organizer,link,created_by,category FROM events WHERE id=$1`, id)
 	if err != nil {
 		return Event{}, err
 	}
@@ -133,7 +133,7 @@ func GetEventByID(id string, translate bool) (Event, error) {
 		return Event{}, errors.New("event does not exist")
 	}
 	var event Event
-	if err := rows.Scan(&event.ID, &event.City, &event.Date, &event.Address, &event.Description, &event.Organizer, &event.Link, &event.CreatedBy); err != nil {
+	if err := rows.Scan(&event.ID, &event.City, &event.Date, &event.Address, &event.Description, &event.Organizer, &event.Link, &event.CreatedBy, &event.Category); err != nil {
 		return Event{}, err
 	}
 	dateTmp, err := time.Parse(time.RFC3339, event.Date)
@@ -219,8 +219,8 @@ func Update(id string, event Event) error {
 	}
 	city := formatCity(event.City)
 
-	_, err = database.DB.Query(`UPDATE events SET (city,date,address,description,organizer,link) = ($1,$2,$3,$4,$5,$6) WHERE id=$7`,
-		city, date, event.Address, event.Description, event.Organizer, event.Link, id)
+	_, err = database.DB.Query(`UPDATE events SET (city,date,address,description,organizer,link,category) = ($1,$2,$3,$4,$5,$6,$7) WHERE id=$8`,
+		city, date, event.Address, event.Description, event.Organizer, event.Link, event.Category, id)
 	if err != nil {
 		return err
 	}

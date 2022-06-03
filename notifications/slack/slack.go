@@ -41,8 +41,9 @@ func (s Slack) SendNewEvent(p notifications.PayloadNewEvent) error {
 
 	attachment2 := slack.Attachment{
 		Color: "good",
-		Text:  fmt.Sprintf("Description: %s\n\nUserID: `%s`\n EventID: `%s`\nLien: `https://manifeste.info/evenement/%s`", p.EventDesc, p.UserID, p.EventID, p.EventID),
-		Ts:    json.Number(strconv.FormatInt(time.Now().Unix(), 10)),
+		Text: fmt.Sprintf("Description: %s\n\nUserID: `%s`\nEventID: `%s`\nCategory: `%s`\nLien: `https://manifeste.info/evenement/%s`",
+			p.EventDesc, p.UserID, p.EventID, p.EventCategory, p.EventID),
+		Ts: json.Number(strconv.FormatInt(time.Now().Unix(), 10)),
 	}
 
 	msg := slack.WebhookMessage{

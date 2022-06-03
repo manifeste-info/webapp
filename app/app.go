@@ -596,7 +596,8 @@ func (a App) newPage(c *gin.Context) {
 
 		HasConfirmedAccount bool
 
-		Cities []string
+		Cities     []string
+		Categories []string
 
 		City        string `form:"city"`
 		Address     string `form:"address"`
@@ -605,6 +606,7 @@ func (a App) newPage(c *gin.Context) {
 		Time        string `form:"time"`
 		Organizer   string `form:"organizer"`
 		Link        string `form:"link"`
+		Category    string `form:"category"`
 	}
 	var p page
 
@@ -636,6 +638,8 @@ func (a App) newPage(c *gin.Context) {
 	}
 
 	p.Cities = utils.AllCities
+	p.Categories = events.Categories
+	p.Category = events.Categories[0]
 	c.HTML(http.StatusOK, "new.html", p)
 }
 
@@ -663,6 +667,7 @@ func (a App) newProcess(c *gin.Context) {
 		Time        string `form:"time"`
 		Organizer   string `form:"organizer"`
 		Link        string `form:"link"`
+		Category    string `form:"category"`
 	}
 	var p page
 
@@ -674,7 +679,7 @@ func (a App) newProcess(c *gin.Context) {
 		return
 	}
 
-	if p.City == "" || p.Address == "" || p.Description == "" || p.Date == "" || p.Time == "" || p.Organizer == "" {
+	if p.City == "" || p.Address == "" || p.Description == "" || p.Date == "" || p.Time == "" || p.Organizer == "" || p.Category == "" {
 		p.Error = true
 		p.ErrMsg = "Tous les champs marqués d'un astérique sont obligatoires."
 		c.HTML(http.StatusOK, "new.html", p)
@@ -717,7 +722,7 @@ func (a App) newProcess(c *gin.Context) {
 		}
 
 		// create the event in the database
-		eid, err = events.Create(city, p.Address, p.Date, p.Time, p.Description, p.Organizer, p.Link, cl.UID)
+		eid, err = events.Create(city, p.Address, p.Date, p.Time, p.Description, p.Organizer, p.Link, cl.UID, p.Category)
 		if err != nil {
 			p.Error = true
 			p.ErrMsg = "Une erreur est survenue, impossible de créer l'évènement."
@@ -729,10 +734,11 @@ func (a App) newProcess(c *gin.Context) {
 	}
 
 	payload := notifications.PayloadNewEvent{
-		EventID:   eid,
-		UserID:    cl.UID,
-		EventDesc: p.Description,
-		Kind:      notifications.KindCreate,
+		EventID:       eid,
+		UserID:        cl.UID,
+		EventDesc:     p.Description,
+		EventCategory: p.Category,
+		Kind:          notifications.KindCreate,
 	}
 	if err := a.Notifier.SendNewEvent(payload); err != nil {
 		log.Errorf("cannot send create payload via notifier: %s", err)
@@ -793,7 +799,9 @@ func (a App) updatePage(c *gin.Context) {
 		Success bool
 
 		Exists bool
-		Event  events.Event
+
+		Event      events.Event
+		Categories []string
 	}
 	var p page
 
@@ -852,6 +860,7 @@ func (a App) updatePage(c *gin.Context) {
 	timeParts := strings.Split(parts[1], ":")
 	p.Event.Time = fmt.Sprintf("%s:%s", timeParts[0], timeParts[1])
 
+	p.Categories = utils.RemoveFromSliceOrdered(events.Categories, p.Event.Category)
 	c.HTML(http.StatusOK, "update.html", p)
 }
 
@@ -878,6 +887,7 @@ func (a App) updateProcess(c *gin.Context) {
 		Organizer   string `form:"organizer"`
 		Link        string `form:"link"`
 		ID          string
+		Category    string `form:"category"`
 	}
 	var p page
 
@@ -914,6 +924,7 @@ func (a App) updateProcess(c *gin.Context) {
 		Organizer:   p.Organizer,
 		Link:        p.Link,
 		ID:          p.ID,
+		Category:    p.Category,
 	}
 
 	// get the user ID
@@ -973,10 +984,11 @@ func (a App) updateProcess(c *gin.Context) {
 	}
 
 	payload := notifications.PayloadNewEvent{
-		EventID:   p.ID,
-		UserID:    cl.UID,
-		EventDesc: p.Description,
-		Kind:      notifications.KindEdit,
+		EventID:       p.ID,
+		UserID:        cl.UID,
+		EventDesc:     p.Description,
+		EventCategory: p.Category,
+		Kind:          notifications.KindEdit,
 	}
 	if err := a.Notifier.SendNewEvent(payload); err != nil {
 		log.Errorf("cannot send edit payload via notifier: %s", err)

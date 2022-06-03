@@ -14,8 +14,9 @@
           <li>🗺️ Localisation: {{.Address}} ({{.City}}) <a target="_blank" href="{{.MapLink}}"> <i>Voir sur la carte</i></a></li>
           <li>👥 Organisateur·rice: {{.Organizer}}</li>
           <li>🔗 En savoir plus: <a href="{{.Link}}">{{.Link}}</a></li>
+          <span class="badge badge-pill badge-info">{{.Category}}</span>
         </ul>
-        <a href="/evenement/{{.ID}}"><i>Partager cet évènement.</i></a> - <a href="/signaler/{{.ID}}"><i style="color:crimson">Signaler.</i></a>
+        <a href="/evenement/{{.ID}}">Partager cet évènement</a> - <a href="/signaler/{{.ID}}" style="color:crimson">Signaler</a>
         <hr>
       </div>
     {{end}}

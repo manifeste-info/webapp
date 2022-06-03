@@ -12,9 +12,9 @@ type Notifier interface {
 }
 
 type PayloadNewEvent struct {
-	EventID, UserID string
-	EventDesc       string
-	Kind            string
+	EventID, UserID          string
+	EventDesc, EventCategory string
+	Kind                     string
 }
 
 type PayloadNewAccount struct {
