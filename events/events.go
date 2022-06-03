@@ -13,6 +13,22 @@ type Event struct {
 	MapLink     string
 	ID          string
 	CreatedBy   string
+	Category    string
+}
+
+var Categories = []string{
+	"Autre",
+	"Culture",
+	"Droits sociaux",
+	"Écologie 🌍",
+	"Gilets jaunes",
+	"Immigration",
+	"LGTBQIA+ 🏳‍🌈",
+	"Pass sanitaire",
+	"Police",
+	"Retraites",
+	"Services publics",
+	"Ukraine 🇺🇦",
 }
 
 // formatCity formats the city in an universal way

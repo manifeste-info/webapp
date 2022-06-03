@@ -69,6 +69,17 @@ func GetClosestCityName(name string) string {
 	return AllCities[closest]
 }
 
+// RemoveFromSliceOrdered removes a string from a slice and keep the order
+func RemoveFromSliceOrdered(slice []string, s string) []string {
+	var idx int
+	for i, v := range slice {
+		if v == s {
+			idx = i
+		}
+	}
+	return append(slice[:idx], slice[idx+1:]...)
+}
+
 // this init function reads and loads the file containing all the cities.
 func init() {
 	fd, err := os.Open("cities.list")
