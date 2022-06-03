@@ -71,13 +71,14 @@ func GetClosestCityName(name string) string {
 
 // RemoveFromSliceOrdered removes a string from a slice and keep the order
 func RemoveFromSliceOrdered(slice []string, s string) []string {
+	sl := slice
 	var idx int
-	for i, v := range slice {
+	for i, v := range sl {
 		if v == s {
 			idx = i
 		}
 	}
-	return append(slice[:idx], slice[idx+1:]...)
+	return append(sl[:idx], sl[idx+1:]...)
 }
 
 // this init function reads and loads the file containing all the cities.
