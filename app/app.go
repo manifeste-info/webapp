@@ -668,6 +668,8 @@ func (a App) newProcess(c *gin.Context) {
 		Organizer   string `form:"organizer"`
 		Link        string `form:"link"`
 		Category    string `form:"category"`
+
+		Cities []string
 	}
 	var p page
 
@@ -743,6 +745,7 @@ func (a App) newProcess(c *gin.Context) {
 	if err := a.Notifier.SendNewEvent(payload); err != nil {
 		log.Errorf("cannot send create payload via notifier: %s", err)
 	}
+	p.Cities = utils.AllCities
 	c.HTML(http.StatusOK, "new.html", p)
 }
 

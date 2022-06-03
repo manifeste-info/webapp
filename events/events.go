@@ -18,7 +18,7 @@ type Event struct {
 
 var Categories = []string{
 	"Autre",
-	"Culture",
+	"Culture 🎭",
 	"Droits sociaux",
 	"Écologie 🌍",
 	"Gilets jaunes",
