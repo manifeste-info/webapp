@@ -73,7 +73,7 @@ $(document).ready(function(){
       
       <div class="mb-3">
         <label for="description">Description<sup style="color:firebrick;">*</sup></label>
-        <textarea class="form-control" id="description" name="description" rows="3" placeholder="Rassemblement en faveur des causes LGBTQI+...">{{.Description}}</textarea>
+        <textarea class="form-control" id="description" name="description" rows="3" maxlength="140" placeholder="Rassemblement en faveur des causes LGBTQI+...">{{.Description}}</textarea>
       </div>
 
       <div class="row">
