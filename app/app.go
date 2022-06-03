@@ -669,7 +669,8 @@ func (a App) newProcess(c *gin.Context) {
 		Link        string `form:"link"`
 		Category    string `form:"category"`
 
-		Cities []string
+		Cities     []string
+		Categories []string
 	}
 	var p page
 
@@ -746,6 +747,7 @@ func (a App) newProcess(c *gin.Context) {
 		log.Errorf("cannot send create payload via notifier: %s", err)
 	}
 	p.Cities = utils.AllCities
+	p.Categories = utils.RemoveFromSliceOrdered(events.Categories, p.Category)
 	c.HTML(http.StatusOK, "new.html", p)
 }
 
