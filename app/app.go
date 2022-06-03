@@ -638,8 +638,8 @@ func (a App) newPage(c *gin.Context) {
 	}
 
 	p.Cities = utils.AllCities
-	p.Categories = events.Categories
-	p.Category = events.Categories[0]
+	p.Categories = events.GetAllCategories()
+	p.Category = events.GetAllCategories()[0]
 	c.HTML(http.StatusOK, "new.html", p)
 }
 
@@ -747,7 +747,7 @@ func (a App) newProcess(c *gin.Context) {
 		log.Errorf("cannot send create payload via notifier: %s", err)
 	}
 	p.Cities = utils.AllCities
-	p.Categories = utils.RemoveFromSliceOrdered(events.Categories, p.Category)
+	p.Categories = utils.RemoveFromSliceOrdered(events.GetAllCategories(), p.Category)
 	c.HTML(http.StatusOK, "new.html", p)
 }
 
@@ -865,7 +865,7 @@ func (a App) updatePage(c *gin.Context) {
 	timeParts := strings.Split(parts[1], ":")
 	p.Event.Time = fmt.Sprintf("%s:%s", timeParts[0], timeParts[1])
 
-	p.Categories = utils.RemoveFromSliceOrdered(events.Categories, p.Event.Category)
+	p.Categories = utils.RemoveFromSliceOrdered(events.GetAllCategories(), p.Event.Category)
 	c.HTML(http.StatusOK, "update.html", p)
 }
 

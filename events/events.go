@@ -16,22 +16,24 @@ type Event struct {
 	Category    string
 }
 
-var Categories = []string{
-	"Autre",
-	"Culture 🎭",
-	"Droits sociaux",
-	"Écologie 🌍",
-	"Gilets jaunes",
-	"Immigration",
-	"LGTBQIA+ 🏳‍🌈",
-	"Pass sanitaire",
-	"Police",
-	"Retraites",
-	"Services publics",
-	"Ukraine 🇺🇦",
-}
-
 // formatCity formats the city in an universal way
 func formatCity(city string) string {
 	return strings.Title(city)
+}
+
+func GetAllCategories() []string {
+	return []string{
+		"Autre",
+		"Culture 🎭",
+		"Droits sociaux",
+		"Écologie 🌍",
+		"Gilets jaunes",
+		"Immigration",
+		"LGTBQIA+ 🏳‍🌈",
+		"Pass sanitaire",
+		"Police",
+		"Retraites",
+		"Services publics",
+		"Ukraine 🇺🇦",
+	}
 }
