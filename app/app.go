@@ -16,6 +16,7 @@ import (
 	"github.com/manifeste-info/webapp/notifications"
 	"github.com/manifeste-info/webapp/notifications/empty"
 	"github.com/manifeste-info/webapp/notifications/slack"
+	"github.com/manifeste-info/webapp/security"
 	"github.com/manifeste-info/webapp/users"
 	"github.com/manifeste-info/webapp/utils"
 	"github.com/oklog/ulid"
@@ -1456,6 +1457,12 @@ func (a App) reportEventPage(c *gin.Context) {
 	if err != nil {
 		p.Message = "Erreur, l'ID de l'évènement est invalide."
 		c.HTML(http.StatusBadRequest, "report.html", p)
+		return
+	}
+
+	if err := security.ReportEvent(c.ClientIP(), id); err != nil {
+		p.Message = err.Error()
+		c.HTML(http.StatusTooManyRequests, "report.html", p)
 		return
 	}
 
