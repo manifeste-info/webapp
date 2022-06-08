@@ -4,8 +4,7 @@ import "time"
 
 type User struct {
 	ID                     string    `db:"id"`
-	Firstname              string    `db:"first_name"`
-	Lastname               string    `db:"last_name"`
+	Nickname               string    `db:"nick_name"`
 	Email                  string    `db:"email"`
 	IsAdmin                bool      `db:"is_admin"`
 	HasConfirmedAccount    bool      `db:"has_confirmed_account"`

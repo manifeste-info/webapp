@@ -19,7 +19,7 @@ func Authenticate(email, password string, jwtSecret []byte) (JWT, error) {
 		return JWT{}, err
 	}
 
-	jwt, err := createJWT(jwtSecret, u.ID, u.Firstname)
+	jwt, err := createJWT(jwtSecret, u.ID, u.Nickname)
 	if err != nil {
 		return JWT{}, err
 	}
