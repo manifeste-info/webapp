@@ -30,18 +30,13 @@ input:invalid:focus {
   <form class="needs-validation" novalidate action="/nouveaucompte" method="POST">
     <div class="row">
       <div class="col-md-6 mb-3">
-        <label for="firstname">Prénom<sup style="color:firebrick;">*</sup></label>
-        <input type="text" class="form-control" name="firstname" id="firstname" placeholder="" value="{{.FirstName}}">
+        <label for="nickname">Pseudo<sup style="color:firebrick;">*</sup></label>
+        <input type="text" class="form-control" name="nickname" id="nickname" placeholder="" value="{{.Nickname}}">
       </div>
       <div class="col-md-6 mb-3">
-        <label for="lastname">Nom<sup style="color:firebrick;">*</sup></label>
-        <input type="text" class="form-control" name="lastname" id="lastname" placeholder="" value="{{.LastName}}">
+        <label for="lastname">Email<sup style="color:firebrick;">*</sup></label>
+        <input type="email" class="form-control" name="email" id="email" placeholder="plop@exemple.com" value="{{.Email}}">
       </div>
-    </div>
-    
-    <div class="mb-3">
-      <label for="email">Email<sup style="color:firebrick;">*</sup></label>
-      <input type="email" class="form-control" name="email" id="email" placeholder="plop@exemple.fr" value="{{.Email}}">
     </div>
 
     <div class="row">

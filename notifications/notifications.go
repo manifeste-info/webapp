@@ -19,7 +19,7 @@ type PayloadNewEvent struct {
 
 type PayloadNewAccount struct {
 	Email, UserID          string
-	Firstname, Lastname    string
+	Nickname               string
 	AccountValidationToken string
 }
 

@@ -1,0 +1,7 @@
+BEGIN;
+
+ALTER TABLE users DROP COLUMN last_name;
+ALTER TABLE users DROP COLUMN first_name;
+ALTER TABLE users ADD COLUMN nick_name TEXT NOT NULL;
+
+COMMIT;

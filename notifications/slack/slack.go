@@ -75,8 +75,8 @@ func (s Slack) SendNewAccount(p notifications.PayloadNewAccount) error {
 
 	attachment2 := slack.Attachment{
 		Color: "good",
-		Text: fmt.Sprintf("Firstname: `%s`\nLastname: `%s`\n Email: `%s`\nUserID: `%s`\nValidation token: `%s`\n",
-			p.Firstname, p.Lastname, p.Email, p.UserID, p.AccountValidationToken),
+		Text: fmt.Sprintf("Nickname: `%s`\nEmail: `%s`\nUserID: `%s`\nValidation token: `%s`\n",
+			p.Nickname, p.Email, p.UserID, p.AccountValidationToken),
 		Ts: json.Number(strconv.FormatInt(time.Now().Unix(), 10)),
 	}
 

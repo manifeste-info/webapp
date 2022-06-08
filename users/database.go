@@ -10,20 +10,20 @@ import (
 )
 
 // CreateAccount creates a new account in the database
-func CreateAccount(firstname, lastname, email, password, vt, id string) error {
+func CreateAccount(nickname, email, password, vt, id string) error {
 	hash, err := hashPassword(password)
 	if err != nil {
 		return err
 	}
 	log.Infof("hashed '%s' password, adding user to database", email)
-	return add(firstname, lastname, email, hash, vt, id)
+	return add(nickname, email, hash, vt, id)
 }
 
 // add adds a user in the database
-func add(firstname, lastname, email, hash, vt, id string) error {
+func add(nickname, email, hash, vt, id string) error {
 	log.Infof("created ULID '%s' for user '%s' in database before database insert", id, email)
-	_, err := database.DB.Query(`INSERT INTO users (id, email, first_name, last_name, password_hash, is_admin, has_confirmed_account, account_validation_token) values ($1, $2, $3, $4, $5, false, false, $6);`,
-		id, email, firstname, lastname, hash, vt)
+	_, err := database.DB.Query(`INSERT INTO users (id, email, nick_name, password_hash, is_admin, has_confirmed_account, account_validation_token) values ($1, $2, $3, $4, false, false, $5);`,
+		id, email, nickname, hash, vt)
 	return err
 }
 
@@ -54,32 +54,28 @@ func CheckIfExists(email string) (bool, error) {
 	return i != 0, nil
 }
 
-// GetUserInfosFromSessionToken retrieve a firstname, a lastname, an email and an user ID based
+// GetUserInfosFromSessionToken retrieve a nickname, an email and an user ID based
 // on a session token
-func GetUserInfosFromSessionToken(sessionToken string) (string, string, string, error) {
-	type user struct {
-		FirstName string `db:"first_name"`
-		LastName  string `db:"last_name"`
-	}
-	var u user
+func GetUserInfosFromSessionToken(sessionToken string) (string, string, error) {
+	var u User
 	log.Infof("getting user informations for session token: '%s'", sessionToken)
 	// email := auth.GetEmailFromSessionToken(sessionToken)
 	email := "broken"
 	log.Infof("retrieved email '%s' associated with token '%s'", email, sessionToken)
 
 	if email == "" {
-		return "", "", "", fmt.Errorf("error getting user infos for session token '%s': email address is empty", sessionToken)
+		return "", "", fmt.Errorf("error getting user infos for session token '%s': email address is empty", sessionToken)
 	}
 
-	rows, err := database.DB.Query(`SELECT first_name,last_name FROM users WHERE email=$1;`, email)
+	rows, err := database.DB.Query(`SELECT nick_name FROM users WHERE email=$1;`, email)
 	if err != nil {
-		return "", "", "", err
+		return "", "", err
 	}
 	rows.Next()
-	if err := rows.Scan(&u.FirstName, &u.LastName); err != nil {
-		return "", "", "", err
+	if err := rows.Scan(&u.Nickname); err != nil {
+		return "", "", err
 	}
-	return u.FirstName, u.LastName, email, nil
+	return u.Nickname, email, nil
 }
 
 // GetUserID returns a user ID based on its email
@@ -173,8 +169,8 @@ func ValidateAccount(id string) error {
 // address
 func GetUserInfosFromEmail(email string) (User, error) {
 	var u User
-	row := database.DB.QueryRow(`SELECT id,first_name,last_name,email,password_hash,is_admin,has_confirmed_account,created_at FROM users WHERE email=$1;`, email)
-	if err := row.Scan(&u.ID, &u.Firstname, &u.Lastname, &u.Email, &u.HashedPassword, &u.IsAdmin, &u.HasConfirmedAccount, &u.CreatedAt); err != nil {
+	row := database.DB.QueryRow(`SELECT id,nick_name,email,password_hash,is_admin,has_confirmed_account,created_at FROM users WHERE email=$1;`, email)
+	if err := row.Scan(&u.ID, &u.Nickname, &u.Email, &u.HashedPassword, &u.IsAdmin, &u.HasConfirmedAccount, &u.CreatedAt); err != nil {
 		return User{}, err
 	}
 	return u, nil
@@ -203,7 +199,7 @@ func GetValidationToken(uid string) (string, error) {
 
 // GetAllUsers returns all users present in database
 func GetAllUsers() ([]User, error) {
-	rows, err := database.DB.Query(`SELECT id,email,first_name,last_name,is_admin,has_confirmed_account,created_at,account_validation_token FROM users;`)
+	rows, err := database.DB.Query(`SELECT id,email,nick_name,is_admin,has_confirmed_account,created_at,account_validation_token FROM users;`)
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +207,7 @@ func GetAllUsers() ([]User, error) {
 
 	for rows.Next() {
 		var u User
-		if err := rows.Scan(&u.ID, &u.Email, &u.Firstname, &u.Lastname, &u.IsAdmin, &u.HasConfirmedAccount, &u.CreatedAt, &u.AccountValidationToken); err != nil {
+		if err := rows.Scan(&u.ID, &u.Email, &u.Nickname, &u.IsAdmin, &u.HasConfirmedAccount, &u.CreatedAt, &u.AccountValidationToken); err != nil {
 			return nil, err
 		}
 		us = append(us, u)

@@ -361,25 +361,23 @@ func registrationPage(c *gin.Context) {
 func (a App) registrationProcess(c *gin.Context) {
 	type page struct {
 		// in case of error
-		Error     bool
-		ErrMsg    string
-		FirstName string
-		LastName  string
-		Email     string
+		Error    bool
+		ErrMsg   string
+		Nickname string
+		Email    string
 
 		// in case of success
 		Success bool
 	}
 
 	p := page{
-		FirstName: c.PostForm("firstname"),
-		LastName:  c.PostForm("lastname"),
-		Email:     c.PostForm("email"),
+		Nickname: c.PostForm("nickname"),
+		Email:    c.PostForm("email"),
 	}
 	pass, passconfirm := c.PostForm("password"), c.PostForm("passwordRetype")
 
 	// check that no field is empty
-	if p.FirstName == "" || p.LastName == "" || p.Email == "" || pass == "" || passconfirm == "" {
+	if p.Nickname == "" || p.Email == "" || pass == "" || passconfirm == "" {
 		p.Error = true
 		p.ErrMsg = "Tous les champs marqués d'un astérisque sont obligatoires."
 		c.HTML(http.StatusOK, "register.html", p)
@@ -427,7 +425,7 @@ func (a App) registrationProcess(c *gin.Context) {
 	id := utils.CreateULID()
 
 	// create user account
-	if err := users.CreateAccount(p.FirstName, p.LastName, p.Email, pass, validToken, id); err != nil {
+	if err := users.CreateAccount(p.Nickname, p.Email, pass, validToken, id); err != nil {
 		p.Error = true
 		p.ErrMsg = "Une erreur est survenue lors de la création du compte."
 		c.HTML(http.StatusInternalServerError, "register.html", p)
@@ -456,8 +454,7 @@ func (a App) registrationProcess(c *gin.Context) {
 	payload := notifications.PayloadNewAccount{
 		UserID:                 id,
 		Email:                  p.Email,
-		Firstname:              p.FirstName,
-		Lastname:               p.LastName,
+		Nickname:               p.Nickname,
 		AccountValidationToken: validToken,
 	}
 
@@ -1419,8 +1416,7 @@ func adminAllUsersPage(c *gin.Context) {
 	for _, u := range us {
 		c.IndentedJSON(http.StatusOK, gin.H{
 			"user_id":                  u.ID,
-			"first_name":               u.Firstname,
-			"last_name":                u.Lastname,
+			"nick_name":                u.Nickname,
 			"email":                    u.Email,
 			"account_validation_token": u.AccountValidationToken,
 			"has_confirmed_account":    u.HasConfirmedAccount,
