@@ -27,6 +27,7 @@ func GetAllCategories() []string {
 		"Culture 🎭",
 		"Droits sociaux",
 		"Écologie 🌍",
+		"Féminismes",
 		"Gilets jaunes",
 		"Immigration",
 		"LGTBQIA+ 🏳‍🌈",
