@@ -47,7 +47,9 @@
   <ul>
     {{range .Events}}
     <div class="container mt-3">
-      <li>À {{.City}} le {{.Date}}, ayant lieu {{.Address}}</li><a href="/moncompte/maj/{{.ID}}"><button type="button" class="btn btn-outline-secondary btn-sm">Éditer</button></a> <a href="/moncompte/supprimer/{{.ID}}"><button type="button" onclick="clicked(event)" class="btn btn-outline-danger btn-sm">Supprimer</button></a>
+      <li>{{.Description}}</li>
+      À {{.City}} le {{.Date}}, ayant lieu {{.Address}}<br>
+      <a href="/moncompte/maj/{{.ID}}"><button type="button" class="btn btn-outline-secondary btn-sm">Éditer</button></a> <a href="/moncompte/supprimer/{{.ID}}"><button type="button" onclick="clicked(event)" class="btn btn-outline-danger btn-sm">Supprimer</button></a>
     </div>
     {{end}}
   </ul>
