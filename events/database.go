@@ -388,7 +388,7 @@ func GetCitiesWithFutureEvents() ([]string, error) {
 				return cities, err
 			}
 
-			if time.Now().After(dateTmp) {
+			if time.Now().After(dateTmp.Add(time.Hour * 8)) {
 				continue
 			}
 
