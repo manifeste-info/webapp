@@ -213,7 +213,8 @@ func (a App) homePage(c *gin.Context) {
 
 	// todo: better error handling
 	// if the following fails, it is not critical. Should we display an error?
-	p.Cities, err = events.GetCitiesWithEvents()
+	// p.Cities, err = events.GetCitiesWithEvents()
+	p.Cities, err = events.GetCitiesWithFutureEvents()
 	if err != nil {
 		log.Errorf("cannot get cities list: %s", err)
 	}
