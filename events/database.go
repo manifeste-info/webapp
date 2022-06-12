@@ -363,3 +363,41 @@ func UpdateEventReports(id string, num int) error {
 	_, err := database.DB.Query(`UPDATE events SET num_of_reports=$1 WHERE id=$2;`, num, id)
 	return err
 }
+
+func GetCitiesWithFutureEvents() ([]string, error) {
+	rows, err := database.DB.Query(`SELECT city, date FROM events;`)
+	if err != nil {
+		return nil, err
+	}
+
+	type row struct {
+		City string `db:"city"`
+		Date string `db:"date"`
+	}
+	var cities []string
+
+	for rows.Next() {
+		var r row
+		if err := rows.Scan(&r.City, &r.Date); err != nil {
+			return nil, err
+		}
+
+		if r.City != "" {
+			dateTmp, err := time.Parse(time.RFC3339, r.Date)
+			if err != nil {
+				return cities, err
+			}
+
+			if time.Now().After(dateTmp.Add(time.Hour * 8)) {
+				continue
+			}
+
+			// avoid duplicatas
+			if !utils.StringInSlice(r.City, cities) {
+				cities = append(cities, r.City)
+			}
+		}
+	}
+	sort.Strings(cities)
+	return cities, nil
+}
