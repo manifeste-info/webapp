@@ -17,7 +17,7 @@ var AllCities []string
 // CreateMapLinkFromAddr creates a link to Google Maps, built with the address
 // and the city provided
 func CreateMapLinkFromAddr(addr, city string) string {
-	prefix := "https://www.google.com/maps/place/"
+	prefix := "https://www.google.com/maps/search/"
 	suffix := strings.ReplaceAll(addr+" "+city, " ", "+")
 	return prefix + suffix
 }
